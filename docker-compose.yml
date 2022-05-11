@@ -1,0 +1,10 @@
+version: "3"
+services:
+  web:
+    build: .
+    container_name: ls-service-web
+    ports :
+      - 3000:3000
+    volumes: 
+          - .:/ls-backend-web #maps current host dir to docker working dir
+          # - /ls-backend-web/node_modules #make node_modules in container persistent
