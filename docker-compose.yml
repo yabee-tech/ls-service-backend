@@ -1,5 +1,15 @@
 version: "3"
 services:
+  cron:
+    build: ./srcs/cronjobs
+    container_name: ls-service-cron
+    environment:
+      -  NOTION_BOOKING_DB_ID=${NOTION_BOOKING_DB_ID}
+      -  NOTION_REPAIR_DB_ID=${NOTION_REPAIR_DB_ID}
+      -  NOTION_FEEDBACK_DB_ID=${NOTION_FEEDBACK_DB_ID}
+      -  NOTION_PAGE_ID=${NOTION_PAGE_ID}
+      -  NOTION_SECRET=${NOTION_SECRET}
+
   web:
     build: .
     container_name: ls-service-web
