@@ -9,7 +9,7 @@ const serializeObject = (raw) => {
 
   serializedElem.id = raw.id;
   serializedElem.TechnicianName = raw.properties.TechnicianName.title[0]?.text.content;
-  serializedElem.Booking = raw.properties.Booking.rich_text[0]?.text.content;
+  serializedElem.Booking = raw.properties.Booking.relation[0]?.id;
   serializedElem.TechnicianContact = raw.properties.TechnicianContact?.phone_number;
   serializedElem.Status = raw.properties.Status.select?.name;
 

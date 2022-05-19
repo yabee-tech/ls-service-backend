@@ -9,7 +9,7 @@ const Feedback = {
 
   get getRemarks() { return this.model.Remarks?.title[0].text.content; },
   get getAttachment() { return this.model.Attachment?.url; },
-  get getRepair() { return this.model.Repair.rich_text[0]?.text.content; },
+  get getRepair() { return this.model.Repair?.relation[0].id; },
   get getType() { return this.model.Type?.select; },
   get getRating() { return this.model.Rating?.number; },
 
@@ -35,15 +35,9 @@ const Feedback = {
 
   set setRepair(value) {
     this.model.Repair = {
-      rich_text:
-            [
-              {
-                text:
-                {
-                  content: value,
-                },
-              },
-            ],
+      relation: [
+        { id: value },
+      ],
     };
   },
 

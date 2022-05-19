@@ -8,7 +8,7 @@ const Repair = {
   model: RepairModel,
 
   get getTechnicianName() { return this.model.TechnicianName?.title[0].text.content; },
-  get getBooking() { return this.model.Booking.rich_text[0]?.text.content; },
+  get getBooking() { return this.model.Booking.relation[0]?.id; },
   get getTechnicianContact() { return this.model.TechnicianContact?.phone_number; },
   get getStatus() { return this.model.Status?.select; },
 
@@ -27,14 +27,8 @@ const Repair = {
   },
   set setBooking(value) {
     this.model.Booking = {
-      rich_text:
-      [
-        {
-          text:
-          {
-            content: value,
-          },
-        },
+      relation: [
+        { id: value },
       ],
     };
   },

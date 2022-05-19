@@ -14,7 +14,7 @@ const serializeObject = (raw) => {
   serializedElem.id = raw.id;
   serializedElem.Remarks = raw.properties.Remarks.title[0]?.text.content;
   serializedElem.Attachment = raw.properties.Attachment?.url;
-  serializedElem.Repair = raw.properties.Repair.rich_text[0]?.text.content;
+  serializedElem.Repair = raw.properties.Repair.relation[0]?.id;
   serializedElem.Type = raw.properties.Type.select?.name;
   serializedElem.Rating = raw.properties.Rating.number?.value;
 
@@ -143,7 +143,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.put('/', async (req, res) => {
+router.patch('/', async (req, res) => {
   let notionRes;
   let rating;
 

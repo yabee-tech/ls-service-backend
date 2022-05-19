@@ -22,7 +22,7 @@ fetch(`https://api.notion.com/v1/databases/${process.env.NOTION_REPAIR_DB_ID}/qu
 
     // get id array from response
     response.results?.map((result) => ids.push(JSON.stringify(
-      { id: result.id, booking: result.properties.Booking?.rich_text[0]?.text.content },
+      { id: result.id, booking: result.properties.Booking?.relation[0]?.id },
     )));
 
     // check if temp file exists
