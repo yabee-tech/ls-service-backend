@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-// request payload
+// requeat payload
 const options = {
   method: 'POST',
   headers: {
@@ -9,7 +9,7 @@ const options = {
     'Content-Type': 'application/json',
     Authorization: `Bearer ${process.env.NOTION_SECRET}`,
   },
-  body: JSON.stringify({ page_size: 10, sorts: [{ property: 'CreatedTime', direction: 'descending' }] }),
+  body: JSON.stringify({ page_size: 10, filter: { property: 'Status', select: { equals: 'Confirmed' } }, sorts: [{ property: 'CreatedTime', direction: 'descending' }] }),
 };
 
 fetch(`https://api.notion.com/v1/databases/${process.env.NOTION_BOOKING_DB_ID}/query`, options)
@@ -26,24 +26,24 @@ fetch(`https://api.notion.com/v1/databases/${process.env.NOTION_BOOKING_DB_ID}/q
     )));
 
     // check if temp file exists
-    fs.stat('/tmp/new_bookings.tmp', (statErr) => {
+    fs.stat('/tmp/booking-confirmed.tmp', (err) => {
       // file exists, extract and deserialize data from temp file and compare with response id
-      if (statErr == null) {
-        fs.readFile('/tmp/new_bookings.tmp', 'utf8', (readErr, data) => {
-          if (readErr) { return console.error('Read file : ', readErr); }
+      if (err == null) {
+        fs.readFile('/tmp/booking-confirmed.tmp', 'utf8', (error, data) => {
+          if (error) { return console.error('Read file : ', error); }
           oldIds = data.split('\n');
           differences = ids.filter((x) => !oldIds.includes(x));
           differences.forEach((element) => {
-            console.log('new booking ', element);
+            console.log('booking confirmed ', element);
           });
-          fs.writeFile('/tmp/new_bookings.tmp', ids.join('\n'), (err) => (err ? console.error('overwrite file : ', err) : null));
+          fs.writeFile('/tmp/booking-confirmed.tmp', ids.join('\n'), (writeErr) => (writeErr ? console.error('overwrite file : ', writeErr) : null));
           return 0;
         });
-      } else if (statErr.code === 'ENOENT') {
+      } else if (err.code === 'ENOENT') {
         // doest exist, create temp file and write serialized idarray to temp file
-        fs.writeFile('/tmp/new_bookings.tmp', ids.join('\n'), (err) => (err ? console.error('Write new file : ', err) : null));
+        fs.writeFile('/tmp/booking-confirmed.tmp', ids.join('\n'), (writeNewErr) => (writeNewErr ? console.error('Write new file : ', writeNewErr) : null));
       } else {
-        console.error('fs stat ', statErr.code);
+        console.error('fs stat ', err.code);
       }
     });
   })

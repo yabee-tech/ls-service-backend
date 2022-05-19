@@ -1,78 +1,68 @@
-const TYPE_ENUM = ["Customer", "Technician"]
+const TYPE_ENUM = ['Customer', 'Technician'];
 
-let FeedbackModel = {
-	
-}
+const FeedbackModel = {
 
-let Feedback = {
-	model : FeedbackModel,
+};
 
-	get getRemarks () {return this.model.Remarks?.title[0].text.content},
-	get getAttachment () {return this.model.Attachment?.url},
-	get getRepair () {return this.model.Repair.rich_text[0]?.text.content},
-	get getType () {return this.model.Type?.select},
-	get getRating () {return this.model.Rating?.number},
+const Feedback = {
+  model: FeedbackModel,
 
-	set setRemarks (value)
-	{
-		this.model.Remarks = 
-		{
-			title :
-			[
-				{
-					text:
-					{
-						content: value,
-					},
-				},
-			]
-		}
-	},
+  get getRemarks() { return this.model.Remarks?.title[0].text.content; },
+  get getAttachment() { return this.model.Attachment?.url; },
+  get getRepair() { return this.model.Repair.rich_text[0]?.text.content; },
+  get getType() { return this.model.Type?.select; },
+  get getRating() { return this.model.Rating?.number; },
 
-	set setAttachment (value)
-	{
-		this.model.Attachment = 
-		{
-			url : value
-		}
-	},
+  set setRemarks(value) {
+    this.model.Remarks = {
+      title:
+            [
+              {
+                text:
+                {
+                  content: value,
+                },
+              },
+            ],
+    };
+  },
 
-	set setRepair(value)
-	{
-		this.model.Repair = 
-		{
-			rich_text :
-			[
-				{
-					text:
-					{
-					content: value,
-					},
-				},
-			]
-		}
-	},
+  set setAttachment(value) {
+    this.model.Attachment = {
+      url: value,
+    };
+  },
 
-	set setType (value)
-	{
-		this.model.Type = 
-		{
-			select :
-			{
-				name : value
-			}
-		}
-	},
+  set setRepair(value) {
+    this.model.Repair = {
+      rich_text:
+            [
+              {
+                text:
+                {
+                  content: value,
+                },
+              },
+            ],
+    };
+  },
 
-	set setRating (value)
-	{
-		this.model.Rating = 
-		{
-			number : value
-		}
-	},
+  set setType(value) {
+    this.model.Type = {
+      select:
+            {
+              name: value,
+            },
+    };
+  },
 
-	TYPE_ENUM,
-}
+  set setRating(value) {
+    this.model.Rating = {
+      number: value,
+    };
+  },
+
+  TYPE_ENUM,
+};
 
 module.exports = Feedback;
