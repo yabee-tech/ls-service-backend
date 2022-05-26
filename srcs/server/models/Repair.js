@@ -1,4 +1,24 @@
+const { dataTypes } = require('../utils/utils');
+
 const STATUS_ENUM = ['Resolved', 'Resolving', 'Immenent', 'OTW'];
+const FIELDS = [
+  {
+    name: 'TechnicianName',
+    type: dataTypes.TITLE,
+  },
+  {
+    name: 'Booking',
+    type: dataTypes.RELATION,
+  },
+  {
+    name: 'TechnicianContact',
+    type: dataTypes.PHONE_NUMBER,
+  },
+  {
+    name: 'Status',
+    type: dataTypes.SELECT,
+  },
+];
 
 const RepairModel = {
 
@@ -6,6 +26,8 @@ const RepairModel = {
 
 const Repair = {
   model: RepairModel,
+
+  fields: FIELDS,
 
   get getTechnicianName() { return this.model.TechnicianName?.title[0].text.content; },
   get getBooking() { return this.model.Booking.relation[0]?.id; },

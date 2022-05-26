@@ -1,9 +1,18 @@
 const express = require('express');
+require('dotenv').config();
 
 const router = express.Router();
 const { Client } = require('@notionhq/client');
 const Repair = require('../models/Repair');
+const { fieldExists, generateFilter } = require('../utils/utils');
 
+/**
+ * Takes in a raw notion api object and converts it into a
+ * more redable and less verbose json response
+ *
+ * @param {*} raw Raw notion api response object
+ * @returns a less verbose JSON response of the object
+ */
 const serializeObject = (raw) => {
   const serializedElem = {};
 
@@ -12,7 +21,6 @@ const serializeObject = (raw) => {
   serializedElem.Booking = raw.properties.Booking.relation[0]?.id;
   serializedElem.TechnicianContact = raw.properties.TechnicianContact?.phone_number;
   serializedElem.Status = raw.properties.Status.select?.name;
-
   return serializedElem;
 };
 
@@ -74,6 +82,16 @@ const bookingExists = async (bookingId) => {
   return true;
 };
 
+/**
+ * List endpoint
+ *
+ * 1. Checks for bad filteron and sorton values
+ * 2. Checks for bad sortby values
+ * 3. Checks for missing sorton/filteron
+ * 4. Generate payload to send to notion api
+ * 5. Send payload to notion api
+ * 6. serialize data if needed before responding back to client
+ */
 router.get('/', async (req, res) => {
   let notionRes;
 
@@ -81,8 +99,8 @@ router.get('/', async (req, res) => {
     filterOn, filterBy, sortOn, sortBy, pageCursor, pageSize, noSerialize,
   } = req.query;
 
-  if ((filterOn && !Object.keys(Repair.model).includes(filterOn))
-  || (sortOn && !Object.keys(Repair.model).includes(sortOn))) { return res.status(400).json({ status: 400, error: 'Unknown filterOn or sortOn field' }); }
+  if ((filterOn && !fieldExists(Repair.fields, filterOn))
+  || (sortOn && !fieldExists(Repair.fields, sortOn))) { return res.status(400).json({ status: 400, error: 'Unknown filterOn or sortOn field' }); }
 
   if (sortBy && (sortBy !== 'ascending' && sortBy !== 'descending')) { return res.status(400).json({ status: 400, error: 'Invalid sortBy field' }); }
 
@@ -92,11 +110,8 @@ router.get('/', async (req, res) => {
 
   const payload = {};
   payload.database_id = process.env.NOTION_REPAIR_DB_ID;
-  if (filterBy) {
-    payload.filter = {
-      property: filterOn,
-      equals: filterBy,
-    };
+  if (filterBy && generateFilter(Repair.fields, filterBy, filterOn)) {
+    payload.filter = generateFilter(Repair.fields, filterBy, filterOn);
   }
   if (sortBy) {
     payload.sorts = [
@@ -107,7 +122,7 @@ router.get('/', async (req, res) => {
     ];
   }
   if (pageCursor) { payload.start_cursor = pageCursor; }
-  if (pageSize) { payload.pageSize = parseInt(pageSize, 10); }
+  if (pageSize) { payload.page_size = parseInt(pageSize, 10); }
 
   try {
     notionRes = await notion.databases.query(payload);
@@ -117,10 +132,21 @@ router.get('/', async (req, res) => {
   if (noSerialize && noSerialize === 'true') { return res.status(200).send({ status: 200, data: notionRes }); }
   const serializedObject = [];
   notionRes.results.forEach((elem) => serializedObject.push(serializeObject(elem)));
-
-  return res.json({ status: 200, data: serializedObject });
+  return res.json({
+    status: 200,
+    data: serializedObject,
+    next_cursor: notionRes.next_cursor,
+    has_more: notionRes.has_more,
+  });
 });
 
+/**
+ * Retreive endpoint
+ *
+ * 1. Generate payload to send to notion api
+ * 2. Send payload to notion api
+ * 3. serialize data if needed before responding back to client
+ */
 router.get('/:id', async (req, res) => {
   let notionRes;
 
@@ -140,6 +166,14 @@ router.get('/:id', async (req, res) => {
   return res.json({ status: 200, data: serializeObject(notionRes) });
 });
 
+/**
+ * Create endpoint
+ *
+ * 1. Check for body
+ * 2. check for mandatory fields
+ * 3. Set values and generate payload
+ * 4. Send payload and return serialized/deserialized response
+ */
 router.post('/', async (req, res) => {
   let notionRes;
 
@@ -147,16 +181,17 @@ router.post('/', async (req, res) => {
   const { noSerialize } = req.query;
   const model = Repair;
   if (Object.keys(body).length === 0) return res.status(400).json({ status: 400, error: 'No JSON body found' });
-  if (body.TechnicianName) model.setTechnicianName = body.TechnicianName;
-  if (body.Booking) {
-    if (!await bookingExists(body.Booking)) return res.status(400).json({ status: 404, error: 'Booking does not exist' });
-    model.setBooking = body.Booking;
+  for (let index = 0; index < model.fields.length; index += 1) {
+    if (!body[model.fields[index].name]) return res.status(400).json({ status: 400, error: `${model.fields[index].name} field is required` });
   }
-  if (body.TechnicianContact) model.setTechnicianContact = body.TechnicianContact;
-  if (body.Status) {
-    if (!model.STATUS_ENUM.includes(body.Status)) return res.status(400).json({ status: 400, error: 'Invalid status' });
-    model.setStatus = body.Status;
-  }
+
+  model.setTechnicianName = body.TechnicianName;
+  if (!await bookingExists(body.Booking)) return res.status(400).json({ status: 404, error: 'Booking does not exist' });
+  model.setBooking = body.Booking;
+  model.setTechnicianContact = body.TechnicianContact;
+  if (!model.STATUS_ENUM.includes(body.Status)) return res.status(400).json({ status: 400, error: 'Invalid status' });
+  model.setStatus = body.Status;
+
   try {
     notionRes = await notion.pages.create({
       parent: {
@@ -164,13 +199,20 @@ router.post('/', async (req, res) => {
       },
       properties: model.model,
     });
-    if (noSerialize === 'true') return res.status(200).json({ status: 200, data: notionRes });
-    return res.status(200).json({ status: 200, data: serializeObject(notionRes) });
+    if (noSerialize === 'true') return res.status(201).json({ status: 201, data: notionRes });
+    return res.status(200).json({ status: 201, data: serializeObject(notionRes) });
   } catch (error) {
     return res.status(error.status).json({ status: error.status, error });
   }
 });
 
+/**
+ * Update endpoint
+ *
+ * 1. Check for body
+ * 2. Set values and generate payload
+ * 3. Send payload and return serialized/deserialized response
+ */
 router.patch('/:id', async (req, res) => {
   let notionRes;
 

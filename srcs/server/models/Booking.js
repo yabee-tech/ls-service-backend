@@ -1,4 +1,40 @@
+const { dataTypes } = require('../utils/utils');
+
 const STATUS_ENUM = ['Paid', 'Confirmed', 'Pending'];
+const FIELDS = [
+  {
+    name: 'Reason',
+    type: dataTypes.TITLE,
+  },
+  {
+    name: 'Attachment',
+    type: dataTypes.URL,
+  },
+  {
+    name: 'Name',
+    type: dataTypes.RICH_TEXT,
+  },
+  {
+    name: 'Email',
+    type: dataTypes.EMAIL,
+  },
+  {
+    name: 'Contact',
+    type: dataTypes.PHONE_NUMBER,
+  },
+  {
+    name: 'Status',
+    type: dataTypes.SELECT,
+  },
+  {
+    name: 'SuggestedDate',
+    type: dataTypes.DATE,
+  },
+  {
+    name: 'ConfirmedDate',
+    type: dataTypes.DATE,
+  },
+];
 
 const BookingModel = {
 
@@ -6,6 +42,8 @@ const BookingModel = {
 
 const Booking = {
   model: BookingModel,
+
+  fields: FIELDS,
 
   get getReason() { return this.model.Reason?.title[0].text.content; },
   get getAttachment() { return this.model.Attachment?.url; },

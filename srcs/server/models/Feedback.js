@@ -1,4 +1,28 @@
+const { dataTypes } = require('../utils/utils');
+
 const TYPE_ENUM = ['Customer', 'Technician'];
+const FIELDS = [
+  {
+    name: 'Remarks',
+    type: dataTypes.TITLE,
+  },
+  {
+    name: 'Attachment',
+    type: dataTypes.URL,
+  },
+  {
+    name: 'Repair',
+    type: dataTypes.RELATION,
+  },
+  {
+    name: 'Type',
+    type: dataTypes.SELECT,
+  },
+  {
+    name: 'Rating',
+    type: dataTypes.NUMBER,
+  },
+];
 
 const FeedbackModel = {
 
@@ -6,6 +30,8 @@ const FeedbackModel = {
 
 const Feedback = {
   model: FeedbackModel,
+
+  fields: FIELDS,
 
   get getRemarks() { return this.model.Remarks?.title[0].text.content; },
   get getAttachment() { return this.model.Attachment?.url; },

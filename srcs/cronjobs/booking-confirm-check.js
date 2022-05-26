@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-// requeat payload
+// request payload
 const options = {
   method: 'POST',
   headers: {
