@@ -4,8 +4,9 @@
   "description": "\"# ls-service-backend\"",
   "main": "index.js",
   "scripts": {
-    "test":"node_modules/.bin/jest",
-    "dev": "nodemon -L --inspect=0.0.0.0 srcs/server/app.js"
+    "test": "node_modules/.bin/jest",
+    "dev": "nodemon -L --inspect=0.0.0.0 srcs/server/app.js",
+    "dev:bot": "nodemon -L --inspect=0.0.0.0 srcs/bot/telegram.js"
   },
   "repository": {
     "type": "git",
@@ -24,12 +25,14 @@
     "express": "^4.18.1",
     "jest": "^28.1.0",
     "supertest": "^6.2.3",
+    "telegraf": "^4.8.3",
     "zod": "^3.15.1"
   },
   "devDependencies": {
     "eslint": "^8.15.0",
     "eslint-config-airbnb-base": "^15.0.0",
-    "eslint-plugin-import": "^2.26.0"
+    "eslint-plugin-import": "^2.26.0",
+    "nodemon": "^2.0.16"
   },
   "jest": {
     "testEnvironment": "node",
