@@ -39,6 +39,26 @@ describe('Booking Endpoint Tests', () => {
   it('List Bookings (no params)', async () => {
     const res = await request(app).get(`${API_URL}`);
     expect(res.statusCode).toBe(200);
+    expect(res.body.data.length).toBe(2);
+  });
+
+  it('List Bookings (page size)', async () => {
+    const res = await request(app).get(`${API_URL}?pageSize=1`);
+    expect(res.statusCode).toBe(200);
+    expect(res.body.data.length).toBe(1);
+  });
+
+  // test page cursor here
+  it('List Bookings (sort)', async () => {
+    const res = await request(app).get(`${API_URL}?sortBy=descending&sortOn=Reason`);
+    expect(res.statusCode).toBe(200);
+    expect(res.body.data[0].Reason.localeCompare(res.body.data[1].Reason)).toBe(1);
+  });
+
+  it('List Bookings (filter)', async () => {
+    const res = await request(app).get(`${API_URL}?filterOn=Reason&filterBy=new title`);
+    expect(res.statusCode).toBe(200);
+    expect(res.body.data.length).toBe(1);
   });
 
   it('List Bookings (invalid sort by param)', async () => {
@@ -86,6 +106,26 @@ describe('Booking Endpoint Tests', () => {
     expect(res.statusCode).toBe(404);
   });
 
+  it('create Booking', async () => {
+    const payload = {};
+
+    payload.Reason = 'Techname';
+    payload.Attachment = "stuff.com";
+    payload.Name = 'Name';
+    payload.Email = 'mail@mail.mail';
+    payload.Contact = '098765432';
+    payload.Status = 'Pending';
+    payload.SuggestedDate = '2022-06-21';
+    const res = await request(app).post(`${API_URL}/`).send(payload);
+    expect(res.statusCode).toBe(201);
+  });
+
+  it('check created Booking', async () => {
+    const res = await request(app).get(`${API_URL}`);
+    expect(res.statusCode).toBe(200);
+    expect(res.body.data.length).toBe(3);
+  });
+
   it('create Booking (missing body)', async () => {
     const res = await request(app).post(`${API_URL}/`);
     expect(res.statusCode).toBe(400);
@@ -96,6 +136,17 @@ describe('Booking Endpoint Tests', () => {
       .post(`${API_URL}/`)
       .send({ Name: 'asdf' });
     expect(res.statusCode).toBe(400);
+  });
+
+  it('update Booking', async () => {
+    const payload = {};
+    const bookings = await request(app).get(API_URL);
+    const booking = bookings.body.data[0];
+
+    payload.Status = 'Confirmed';
+    const res = await request(app).patch(`${API_URL}${booking.id}`).send(payload);
+    expect(res.statusCode).toBe(200);
+    expect(res.body.data.Status).toBe('Confirmed');
   });
 
   it('update Booking (invalid id)', async () => {
@@ -110,6 +161,26 @@ describe('Repair Endpoint Tests', () => {
   it('List Repairs (no params)', async () => {
     const res = await request(app).get(`${API_URL}`);
     expect(res.statusCode).toBe(200);
+    expect(res.body.data.length).toBe(2);
+  });
+
+  it('List Repairs (page size)', async () => {
+    const res = await request(app).get(`${API_URL}?pageSize=1`);
+    expect(res.statusCode).toBe(200);
+    expect(res.body.data.length).toBe(1);
+  });
+
+  // test page cursor here
+  it('List Repairs (sort)', async () => {
+    const res = await request(app).get(`${API_URL}?sortBy=descending&sortOn=TechnicianName`);
+    expect(res.statusCode).toBe(200);
+    expect(res.body.data[0].TechnicianName.localeCompare(res.body.data[1].TechnicianName)).toBe(1);
+  });
+
+  it('List Repairs (filter)', async () => {
+    const res = await request(app).get(`${API_URL}?filterOn=TechnicianName&filterBy=5`);
+    expect(res.statusCode).toBe(200);
+    expect(res.body.data.length).toBe(0);
   });
 
   it('List Repairs (invalid sort by param)', async () => {
@@ -169,9 +240,38 @@ describe('Repair Endpoint Tests', () => {
     expect(res.statusCode).toBe(400);
   });
 
+  it('create Repair', async () => {
+    const payload = {};
+    const bookings = await request(app).get('/api/v1/bookings/');
+
+    payload.TechnicianName = 'Techname';
+    payload.Booking = bookings.body.data[0].id;
+    payload.TechnicianContact = '213456324';
+    payload.Status = 'OTW';
+    const res = await request(app).post(`${API_URL}/`).send(payload);
+    expect(res.statusCode).toBe(200);
+  });
+
+  it('check created Repair', async () => {
+    const res = await request(app).get(`${API_URL}`);
+    expect(res.statusCode).toBe(200);
+    expect(res.body.data.length).toBe(3);
+  });
+
   it('update Repair (invalid id)', async () => {
     const res = await request(app).put(`${API_URL}/81b7098a-9101-4e80-9a0a-40c59a202c9d`);
     expect(res.statusCode).toBe(404);
+  });
+
+  it('update Repair', async () => {
+    const payload = {};
+    const repairs = await request(app).get(API_URL);
+    const repair = repairs.body.data[0];
+
+    payload.Status = 'Resolving';
+    const res = await request(app).patch(`${API_URL}${repair.id}`).send(payload);
+    expect(res.statusCode).toBe(200);
+    expect(res.body.data.Status).toBe('Resolving');
   });
 });
 
@@ -181,6 +281,26 @@ describe('Feedback Endpoint Tests', () => {
   it('List Feedbacks (no params)', async () => {
     const res = await request(app).get(`${API_URL}`);
     expect(res.statusCode).toBe(200);
+    expect(res.body.data.length).toBe(2);
+  });
+
+  it('List Feedbacks (page size)', async () => {
+    const res = await request(app).get(`${API_URL}?pageSize=1`);
+    expect(res.statusCode).toBe(200);
+    expect(res.body.data.length).toBe(1);
+  });
+
+  // test page cursor here
+  it('List Feedbacks (sort)', async () => {
+    const res = await request(app).get(`${API_URL}?sortBy=descending&sortOn=Remarks`);
+    expect(res.statusCode).toBe(200);
+    expect(res.body.data[0].Remarks.localeCompare(res.body.data[1].Remarks)).toBe(1);
+  });
+
+  it('List Feedbacks (filter)', async () => {
+    const res = await request(app).get(`${API_URL}?filterOn=Rating&filterBy=5`);
+    expect(res.statusCode).toBe(200);
+    expect(res.body.data.length).toBe(0);
   });
 
   it('List Feedbacks (invalid sort by param)', async () => {
@@ -231,6 +351,25 @@ describe('Feedback Endpoint Tests', () => {
   it('create Feedback (missing body)', async () => {
     const res = await request(app).post(`${API_URL}/`);
     expect(res.statusCode).toBe(400);
+  });
+
+  it('create Feedback', async () => {
+    const payload = {};
+    const repairs = await request(app).get('/api/v1/repairs/');
+
+    payload.Remarks = 'okder';
+    payload.Repair = repairs.body.data[0].id;
+    payload.Attachment = 'okder.jpeg';
+    payload.Type = 'Technician';
+    payload.Rating = 12;
+    const res = await request(app).post(`${API_URL}/`).send(payload);
+    expect(res.statusCode).toBe(200);
+  });
+
+  it('check created Feedback', async () => {
+    const res = await request(app).get(`${API_URL}`);
+    expect(res.statusCode).toBe(200);
+    expect(res.body.data.length).toBe(3);
   });
 
   it('create Feedback (missing partial body)', async () => {

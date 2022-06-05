@@ -4,6 +4,7 @@
   "description": "\"# ls-service-backend\"",
   "main": "index.js",
   "scripts": {
+    "migrate": "node srcs/server/test-migrate.js",
     "test":"node_modules/.bin/jest",
     "dev": "nodemon -L --inspect=0.0.0.0 srcs/server/app.js"
   },
