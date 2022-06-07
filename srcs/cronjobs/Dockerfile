@@ -5,7 +5,7 @@ FROM node:latest
 
 # Copy entrypoint sh into working directory
 COPY entry.sh .
- 
+
 # Copy check for new booking script into working directory
 COPY new-booking-check.js .
 

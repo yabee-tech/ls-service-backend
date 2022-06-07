@@ -8,7 +8,7 @@ async function sendNotification(message) {
 
   // handle no subscribers
   if (subscribers.length === 0) {
-    console.error('Message not sent: there are 0 subscribers');
+    console.error('Notification not sent: there are 0 subscribers');
     return;
   }
 
@@ -18,7 +18,7 @@ async function sendNotification(message) {
     bot.telegram.sendMessage(chatId, message);
   });
 
-  console.log(`Message was sent to ${subscribers.length} subscribers`);
+  console.log(`Notification sent to ${subscribers.length} subscribers`);
 }
 
 module.exports = { sendNotification };

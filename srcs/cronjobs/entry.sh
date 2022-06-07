@@ -1,8 +1,8 @@
 #!/bin/bash
 SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]:-$0}"; )" &> /dev/null && pwd 2> /dev/null; )";
-DURATION='5'
+DURATION='1m'
 
-printf 'This cron will run every 5 seconds\n\n'
+printf 'This cron will run every 1 minute\n\n'
 
 while true
 do
