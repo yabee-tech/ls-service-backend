@@ -6,9 +6,15 @@ const { Client } = require('@notionhq/client');
 const Feedback = require('../models/Feedback');
 const { fieldExists, generateFilter } = require('../utils/utils');
 
+// declaring constants
+const { ENV } = process.env;
+const SECRET = (ENV === 'dev') ? process.env.NOTION_SECRET_DEV : process.env.NOTION_SECRET;
+const FEEDBACK_DB_ID = (ENV === 'dev') ? process.env.NOTION_FEEDBACK_DB_ID_DEV : process.env.NOTION_FEEDBACK_DB_ID;
+const REPAIR_DB_ID = (ENV === 'dev') ? process.env.NOTION_REPAIR_DB_ID_DEV : process.env.NOTION_REPAIR_DB_ID;
+
 // Initializing a client
 const notion = new Client({
-  auth: process.env.NOTION_SECRET,
+  auth: SECRET,
 });
 
 // TODO fix rating not serialIed
@@ -38,7 +44,7 @@ const repairExists = async (repairId) => {
   const payload = { page_id: repairId };
   try {
     notionRes = await notion.pages.retrieve(payload);
-    if (notionRes && notionRes.parent.database_id.replaceAll('-', '') !== process.env.NOTION_REPAIR_DB_ID) { return false; }
+    if (notionRes && notionRes.parent.database_id.replaceAll('-', '') !== REPAIR_DB_ID) { return false; }
   } catch (error) {
     return false;
   }
@@ -76,7 +82,7 @@ router.get('/', async (req, res) => {
   if ((!sortOn && sortBy) || (!sortBy && sortOn)) { return res.status(400).json({ status: 400, error: 'Missing sortOn/sortBy but not sortBy/sortOn is present' }); }
 
   const payload = {};
-  payload.database_id = process.env.NOTION_FEEDBACK_DB_ID;
+  payload.database_id = FEEDBACK_DB_ID;
   if (filterBy && generateFilter(Feedback.fields, filterBy, filterOn)) {
     payload.filter = generateFilter(Feedback.fields, filterBy, filterOn);
   }
@@ -125,7 +131,7 @@ router.get('/:id', async (req, res) => {
 
   try {
     notionRes = await notion.pages.retrieve(payload);
-    if (notionRes && notionRes.parent.database_id.replaceAll('-', '') !== process.env.NOTION_FEEDBACK_DB_ID) { return res.status(404).json({ status: 404, error: 'Item not found' }); }
+    if (notionRes && notionRes.parent.database_id.replaceAll('-', '') !== FEEDBACK_DB_ID) { return res.status(404).json({ status: 404, error: 'Item not found' }); }
   } catch (error) {
     return res.status(error.status).send({ status: error.status, error });
   }
@@ -166,7 +172,7 @@ router.post('/', async (req, res) => {
   try {
     notionRes = await notion.pages.create({
       parent: {
-        database_id: process.env.NOTION_FEEDBACK_DB_ID,
+        database_id: FEEDBACK_DB_ID,
       },
       properties: model.model,
     });
@@ -211,7 +217,7 @@ router.patch('/', async (req, res) => {
   try {
     notionRes = await notion.pages.update({
       parent: {
-        database_id: process.env.NOTION_FEEDBACK_DB_ID,
+        database_id: FEEDBACK_DB_ID,
       },
       properties: model.model,
     });

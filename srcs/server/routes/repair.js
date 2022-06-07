@@ -24,6 +24,12 @@ const serializeObject = (raw) => {
   return serializedElem;
 };
 
+// declaring constants
+const { ENV } = process.env;
+const SECRET = (ENV === 'dev') ? process.env.NOTION_SECRET_DEV : process.env.NOTION_SECRET;
+const BOOKING_DB_ID = (ENV === 'dev') ? process.env.NOTION_BOOKING_DB_ID_DEV : process.env.NOTION_BOOKING_DB_ID;
+const REPAIR_DB_ID = (ENV === 'dev') ? process.env.NOTION_REPAIR_DB_ID_DEV : process.env.NOTION_REPAIR_DB_ID;
+
 // const deserializeObject = (raw) => {
 //   const deserializedElem = {
 //     TechnicianName: {
@@ -65,7 +71,7 @@ const serializeObject = (raw) => {
 
 // Initializing a client
 const notion = new Client({
-  auth: process.env.NOTION_SECRET,
+  auth: SECRET,
 });
 
 // check if booking exists
@@ -75,7 +81,7 @@ const bookingExists = async (bookingId) => {
   const payload = { page_id: bookingId };
   try {
     notionRes = await notion.pages.retrieve(payload);
-    if (notionRes && notionRes.parent.database_id.replaceAll('-', '') !== process.env.NOTION_BOOKING_DB_ID) { return false; }
+    if (notionRes && notionRes.parent.database_id.replaceAll('-', '') !== BOOKING_DB_ID) { return false; }
   } catch (error) {
     return false;
   }
@@ -109,7 +115,7 @@ router.get('/', async (req, res) => {
   if ((!sortOn && sortBy) || (!sortBy && sortOn)) { return res.status(400).json({ status: 400, error: 'Missing sortOn/sortBy but not sortBy/sortOn is present' }); }
 
   const payload = {};
-  payload.database_id = process.env.NOTION_REPAIR_DB_ID;
+  payload.database_id = REPAIR_DB_ID;
   if (filterBy && generateFilter(Repair.fields, filterBy, filterOn)) {
     payload.filter = generateFilter(Repair.fields, filterBy, filterOn);
   }
@@ -157,7 +163,7 @@ router.get('/:id', async (req, res) => {
 
   try {
     notionRes = await notion.pages.retrieve(payload);
-    if (notionRes && notionRes.parent.database_id.replaceAll('-', '') !== process.env.NOTION_REPAIR_DB_ID) { return res.status(404).json({ status: 404, error: 'Item not found' }); }
+    if (notionRes && notionRes.parent.database_id.replaceAll('-', '') !== REPAIR_DB_ID) { return res.status(404).json({ status: 404, error: 'Item not found' }); }
   } catch (error) {
     return res.status(error.status).send({ status: error.status, error });
   }
@@ -195,7 +201,7 @@ router.post('/', async (req, res) => {
   try {
     notionRes = await notion.pages.create({
       parent: {
-        database_id: process.env.NOTION_REPAIR_DB_ID,
+        database_id: REPAIR_DB_ID,
       },
       properties: model.model,
     });

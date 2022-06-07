@@ -6,7 +6,8 @@
   "scripts": {
     "test": "node_modules/.bin/jest",
     "dev": "nodemon -L --inspect=0.0.0.0 srcs/server/app.js",
-    "dev:bot": "nodemon -L --inspect=0.0.0.0 srcs/bot/telegram.js"
+    "dev:bot": "nodemon -L --inspect=0.0.0.0 srcs/bot/telegram.js",
+    "migrate": "node srcs/server/test-migrate.js"
   },
   "repository": {
     "type": "git",
