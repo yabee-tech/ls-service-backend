@@ -1,4 +1,12 @@
 const fs = require('fs');
+const fetch = require('node-fetch');
+const { sendNotification } = require('../bot/actions');
+require('dotenv').config();
+
+// process environment variables
+const { ENV } = process.env;
+const SECRET = (ENV === 'dev') ? process.env.NOTION_SECRET_DEV : process.env.NOTION_SECRET;
+const BOOKING_DB_ID = (ENV === 'dev') ? process.env.NOTION_BOOKING_DB_ID_DEV : process.env.NOTION_BOOKING_DB_ID;
 
 // request payload
 const options = {
@@ -7,12 +15,12 @@ const options = {
     Accept: 'application/json',
     'Notion-Version': '2022-02-22',
     'Content-Type': 'application/json',
-    Authorization: `Bearer ${process.env.NOTION_SECRET}`,
+    Authorization: `Bearer ${SECRET}`,
   },
   body: JSON.stringify({ page_size: 10, sorts: [{ property: 'CreatedTime', direction: 'descending' }] }),
 };
 
-fetch(`https://api.notion.com/v1/databases/${process.env.NOTION_BOOKING_DB_ID}/query`, options)
+fetch(`https://api.notion.com/v1/databases/${BOOKING_DB_ID}/query`, options)
   .then((response) => response.json())
   .then((response) => {
     let oldIds;
@@ -34,7 +42,7 @@ fetch(`https://api.notion.com/v1/databases/${process.env.NOTION_BOOKING_DB_ID}/q
           oldIds = data.split('\n');
           differences = ids.filter((x) => !oldIds.includes(x));
           differences.forEach((element) => {
-            console.log('new booking ', element);
+            sendNotification(`A new booking has been added ✅\n${element}`);
           });
           fs.writeFile('/tmp/new_bookings.tmp', ids.join('\n'), (err) => (err ? console.error('overwrite file : ', err) : null));
           return 0;

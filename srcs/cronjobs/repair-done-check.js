@@ -1,4 +1,12 @@
 const fs = require('fs');
+const fetch = require('node-fetch');
+const { sendNotification } = require('../bot/actions');
+require('dotenv').config();
+
+// process environment variables
+const { ENV } = process.env;
+const SECRET = (ENV === 'dev') ? process.env.NOTION_SECRET_DEV : process.env.NOTION_SECRET;
+const REPAIR_DB_ID = (ENV === 'dev') ? process.env.NOTION_REPAIR_DB_ID_DEV : process.env.NOTION_REPAIR_DB_ID;
 
 // requeat payload
 const options = {
@@ -7,12 +15,12 @@ const options = {
     Accept: 'application/json',
     'Notion-Version': '2022-02-22',
     'Content-Type': 'application/json',
-    Authorization: `Bearer ${process.env.NOTION_SECRET}`,
+    Authorization: `Bearer ${SECRET}`,
   },
   body: JSON.stringify({ page_size: 10, filter: { property: 'Status', select: { equals: 'Resolved' } }, sorts: [{ property: 'CreatedTime', direction: 'ascending' }] }),
 };
 
-fetch(`https://api.notion.com/v1/databases/${process.env.NOTION_REPAIR_DB_ID}/query`, options)
+fetch(`https://api.notion.com/v1/databases/${REPAIR_DB_ID}/query`, options)
   .then((response) => response.json())
   .then((response) => {
     let oldIds;
@@ -54,7 +62,7 @@ fetch(`https://api.notion.com/v1/databases/${process.env.NOTION_REPAIR_DB_ID}/qu
                   return;
                 }
                 elemParsed.Contact = res.properties.Contact?.phone_number;
-                console.log('repair done ', JSON.stringify(elemParsed));
+                sendNotification(`A repair has been marked as done ✅\n${JSON.stringify(elemParsed)}`);
               })
               .catch((e) => console.log('error ', e));
           });
