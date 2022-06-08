@@ -1,26 +1,32 @@
 version: "3"
 services:
   cron:
-    build: ./srcs/cronjobs
+    build:
+      context: .
+      dockerfile: ./Dockerfile.cron
     container_name: ls-service-cron
     environment:
-      -  NOTION_BOOKING_DB_ID=${NOTION_BOOKING_DB_ID}
-      -  NOTION_REPAIR_DB_ID=${NOTION_REPAIR_DB_ID}
-      -  NOTION_FEEDBACK_DB_ID=${NOTION_FEEDBACK_DB_ID}
-      -  NOTION_PAGE_ID=${NOTION_PAGE_ID}
-      -  NOTION_SECRET=${NOTION_SECRET}
-      -  ENV=${ENV}
-      -  NOTION_BOOKING_DB_ID_DEV=${NOTION_BOOKING_DB_ID_DEV}
-      -  NOTION_REPAIR_DB_ID_DEV=${NOTION_REPAIR_DB_ID_DEV}
-      -  NOTION_FEEDBACK_DB_ID_DEV=${NOTION_FEEDBACK_DB_ID_DEV}
-      -  NOTION_PAGE_ID_DEV=${NOTION_PAGE_ID_DEV}
-      -  NOTION_SECRET_DEV=${NOTION_SECRET_DEV}
+      - NOTION_BOOKING_DB_ID=${NOTION_BOOKING_DB_ID}
+      - NOTION_REPAIR_DB_ID=${NOTION_REPAIR_DB_ID}
+      - NOTION_FEEDBACK_DB_ID=${NOTION_FEEDBACK_DB_ID}
+      - NOTION_PAGE_ID=${NOTION_PAGE_ID}
+      - NOTION_SECRET=${NOTION_SECRET}
+      - ENV=${ENV}
+      - NOTION_BOOKING_DB_ID_DEV=${NOTION_BOOKING_DB_ID_DEV}
+      - NOTION_REPAIR_DB_ID_DEV=${NOTION_REPAIR_DB_ID_DEV}
+      - NOTION_FEEDBACK_DB_ID_DEV=${NOTION_FEEDBACK_DB_ID_DEV}
+      - NOTION_PAGE_ID_DEV=${NOTION_PAGE_ID_DEV}
+      - NOTION_SECRET_DEV=${NOTION_SECRET_DEV}
+    volumes:
+      - .:/ls-backend-cron #maps current host dir to docker working dir
 
   web:
-    build: .
+    build:
+      context: .
+      dockerfile: ./Dockerfile.web
     container_name: ls-service-web
-    ports :
-      - 3000:3000
-    volumes: 
-          - .:/ls-backend-web #maps current host dir to docker working dir
-          # - /ls-backend-web/node_modules #make node_modules in container persistent
+    ports:
+      - 80:3000
+    volumes:
+      - .:/ls-backend-web #maps current host dir to docker working dir
+      # - /ls-backend-web/node_modules #make node_modules in container persistent

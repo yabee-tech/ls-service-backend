@@ -1,0 +1,10 @@
+FROM node:latest
+
+ADD . /ls-backend-cron
+WORKDIR /ls-backend-cron
+
+# Install dependencies
+RUN npm install 
+
+# Run the command on container startup
+CMD ["npm", "run", "cron"]
