@@ -5,12 +5,15 @@ FROM node:latest
 
 # Copy entrypoint sh into working directory
 COPY entry.sh .
- 
+
 # Copy check for new booking script into working directory
 COPY new-booking-check.js .
 
 # Copy check for repair finish script into working directory
 COPY repair-done-check.js .
+
+# Copy check for booking confirm script into working directory
+COPY booking-confirm-check.js .
 
 # Run the command on container startup
 CMD ["bash", "entry.sh"]
