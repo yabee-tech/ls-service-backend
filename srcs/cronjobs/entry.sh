@@ -1,6 +1,6 @@
 #!/bin/bash
 SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]:-$0}"; )" &> /dev/null && pwd 2> /dev/null; )";
-DURATION='1m'
+DURATION=60
 
 printf 'This cron will run every 1 minute\n\n'
 
