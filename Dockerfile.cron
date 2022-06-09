@@ -1,10 +1,15 @@
-FROM node:latest
+FROM node
+
+RUN mkdir /install
+
+#install dependencies
+ADD ./package.json /install
+WORKDIR /install
+RUN npm install --verbose
+ENV NODE_PATH=/install/node_modules
 
 ADD . /ls-backend-cron
 WORKDIR /ls-backend-cron
 
-# Install dependencies
-RUN npm install 
 
-# Run the command on container startup
 CMD ["npm", "run", "cron"]
