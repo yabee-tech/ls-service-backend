@@ -4,12 +4,14 @@ const Express = require('express');
 const bookingRoutes = require('../srcs/server/routes/bookings');
 const repairRoutes = require('../srcs/server/routes/repair');
 const feedbackRoutes = require('../srcs/server/routes/feedback');
+const technicianRoutes = require('../srcs/server/routes/technician');
 
 const app = new Express();
 app.use(Express.json());
 app.use('/api/v1/bookings', bookingRoutes);
 app.use('/api/v1/repairs', repairRoutes);
 app.use('/api/v1/feedbacks', feedbackRoutes);
+app.use('/api/v1/technicians', technicianRoutes);
 
 describe('Invalid route test', () => {
   it('Should return 404 (root route)', async () => {
@@ -110,12 +112,13 @@ describe('Booking Endpoint Tests', () => {
     const payload = {};
 
     payload.Reason = 'Techname';
-    payload.Attachment = "stuff.com";
+    payload.Attachment = 'stuff.com';
     payload.Name = 'Name';
     payload.Email = 'mail@mail.mail';
     payload.Contact = '098765432';
     payload.Status = 'Pending';
     payload.SuggestedDate = '2022-06-21';
+    payload.Address = '2-2-1, Taman Reqwew';
     const res = await request(app).post(`${API_URL}/`).send(payload);
     expect(res.statusCode).toBe(201);
   });
@@ -172,13 +175,13 @@ describe('Repair Endpoint Tests', () => {
 
   // test page cursor here
   it('List Repairs (sort)', async () => {
-    const res = await request(app).get(`${API_URL}?sortBy=descending&sortOn=TechnicianName`);
+    const res = await request(app).get(`${API_URL}?sortBy=descending&sortOn=Technician`);
     expect(res.statusCode).toBe(200);
-    expect(res.body.data[0].TechnicianName.localeCompare(res.body.data[1].TechnicianName)).toBe(1);
+    expect(res.body.data[0].Technician.localeCompare(res.body.data[1].Technician)).toBe(-1);
   });
 
   it('List Repairs (filter)', async () => {
-    const res = await request(app).get(`${API_URL}?filterOn=TechnicianName&filterBy=5`);
+    const res = await request(app).get(`${API_URL}?filterOn=Status&filterBy=Resolved`);
     expect(res.statusCode).toBe(200);
     expect(res.body.data.length).toBe(0);
   });
@@ -243,10 +246,10 @@ describe('Repair Endpoint Tests', () => {
   it('create Repair', async () => {
     const payload = {};
     const bookings = await request(app).get('/api/v1/bookings/');
+    const technicians = await request(app).get('/api/v1/technicians/');
 
-    payload.TechnicianName = 'Techname';
+    payload.Technician = technicians.body.data[0].id;
     payload.Booking = bookings.body.data[0].id;
-    payload.TechnicianContact = '213456324';
     payload.Status = 'OTW';
     const res = await request(app).post(`${API_URL}/`).send(payload);
     expect(res.statusCode).toBe(200);

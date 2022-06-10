@@ -1,6 +1,7 @@
 // this is the web server initialization file
 // import required libraries and instansiate express app
 const express = require('express');
+const morgan = require('morgan');
 require('dotenv').config();
 
 const app = express();
@@ -10,14 +11,19 @@ const port = process.env.PORT;
 const bookingRoutes = require('./routes/bookings');
 const repairRoutes = require('./routes/repair');
 const feedbackRoutes = require('./routes/feedback');
+const technicianRoutes = require('./routes/technician');
 
 // json middleware
 app.use(express.json());
+
+// logging
+app.use(morgan('combined'));
 
 // routes
 app.use('/api/v1/bookings', bookingRoutes);
 app.use('/api/v1/repairs', repairRoutes);
 app.use('/api/v1/feedbacks', feedbackRoutes);
+app.use('/api/v1/technicians', technicianRoutes);
 
 // 404 route
 app.get('*', (req, res) => {

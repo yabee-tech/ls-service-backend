@@ -3,20 +3,20 @@ require('dotenv').config();
 
 const router = express.Router();
 const { Client } = require('@notionhq/client');
-const Booking = require('../models/Booking');
+const Technician = require('../models/Technician');
 const { fieldExists, generateFilter } = require('../utils/utils');
 
 // declaring constants
 const { ENV } = process.env;
 const SECRET = (ENV === 'dev') ? process.env.NOTION_SECRET_DEV : process.env.NOTION_SECRET;
-const BOOKING_DB_ID = (ENV === 'dev') ? process.env.NOTION_BOOKING_DB_ID_DEV : process.env.NOTION_BOOKING_DB_ID;
+const TECHNICIAN_DB_ID = (ENV === 'dev') ? process.env.NOTION_TECHNICIAN_DB_ID_DEV : process.env.NOTION_TECHNICIAN_DB_ID;
 
 // Initializing a client
 const notion = new Client({
   auth: SECRET,
 });
 
-// @TODO update docs for address dield
+// @TODO update docs for technician routes
 
 /**
  * Takes in a raw notion api object and converts it into a
@@ -28,15 +28,9 @@ const notion = new Client({
 const serializeObject = (raw) => {
   const serializedElem = {};
   serializedElem.id = raw.id;
-  serializedElem.Reason = raw.properties.Reason.title[0]?.text.content;
-  serializedElem.Attachment = raw.properties.Attachment?.url;
-  serializedElem.Name = raw.properties.Name.rich_text[0]?.text.content;
-  serializedElem.Email = raw.properties.Email?.email;
+  serializedElem.Name = raw.properties.Name.title[0]?.text.content;
+  serializedElem.LastSeen = raw.properties.LastSeen.rich_text[0]?.text.content;
   serializedElem.Contact = raw.properties.Contact?.phone_number;
-  serializedElem.Status = raw.properties.Status.select?.name;
-  serializedElem.SuggestedDate = raw.properties.SuggestedDate.date?.start;
-  serializedElem.ConfirmedDate = raw.properties.ConfirmedDate.date?.start;
-  serializedElem.Address = raw.properties.Address.rich_text[0]?.text.content;
 
   return serializedElem;
 };
@@ -62,8 +56,8 @@ router.get('/', async (req, res) => {
   const { pageSize } = req.query;
   const { noSerialize } = req.query;
 
-  if ((filterOn && !fieldExists(Booking.fields, filterOn))
-  || (sortOn && !fieldExists(Booking.fields, sortOn))) { return res.status(400).json({ status: 400, error: 'Unknown filterOn or sortOn field' }); }
+  if ((filterOn && !fieldExists(Technician.fields, filterOn))
+  || (sortOn && !fieldExists(Technician.fields, sortOn))) { return res.status(400).json({ status: 400, error: 'Unknown filterOn or sortOn field' }); }
 
   if (sortBy && (sortBy !== 'ascending' && sortBy !== 'descending')) { return res.status(400).json({ status: 400, error: 'Invalid sortBy field' }); }
 
@@ -72,9 +66,9 @@ router.get('/', async (req, res) => {
   if ((!sortOn && sortBy) || (!sortBy && sortOn)) { return res.status(400).json({ status: 400, error: 'Missing sortOn/sortBy but sortBy/sortOn is present' }); }
 
   const payload = {};
-  payload.database_id = BOOKING_DB_ID;
-  if (filterBy && generateFilter(Booking.fields, filterBy, filterOn)) {
-    payload.filter = generateFilter(Booking.fields, filterBy, filterOn);
+  payload.database_id = TECHNICIAN_DB_ID;
+  if (filterBy && generateFilter(Technician.fields, filterBy, filterOn)) {
+    payload.filter = generateFilter(Technician.fields, filterBy, filterOn);
   }
   if (sortBy) {
     payload.sorts = [
@@ -121,55 +115,13 @@ router.get('/:id', async (req, res) => {
 
   try {
     notionRes = await notion.pages.retrieve(payload);
-    if (notionRes && notionRes.parent.database_id.replaceAll('-', '') !== BOOKING_DB_ID) { return res.status(404).json({ status: 404, error: 'Item not found' }); }
+    if (notionRes && notionRes.parent.database_id.replaceAll('-', '') !== TECHNICIAN_DB_ID) { return res.status(404).json({ status: 404, error: 'Item not found' }); }
   } catch (error) {
     return res.status(error.status).json({ status: error.status, error });
   }
   if (noSerialize && noSerialize === 'true') return res.status(200).json({ status: 200, data: notionRes });
 
   return res.json({ status: 200, data: serializeObject(notionRes) });
-});
-
-/**
- * Create endpoint
- *
- * 1. Check for body
- * 2. check for mandatory fields
- * 3. Set values and generate payload
- * 4. Send payload and return serialized/deserialized response
- */
-router.post('/', async (req, res) => {
-  let notionRes;
-
-  const { body } = req;
-  const { noSerialize } = req.query;
-  const model = Booking;
-  if (Object.keys(body).length === 0) { return res.status(400).json({ status: 400, error: 'No JSON body found' }); }
-  for (let index = 0; index < model.fields.length; index += 1) {
-    if (!body[model.fields[index].name] && model.fields[index].name !== 'ConfirmedDate') return res.status(400).json({ status: 400, error: `${model.fields[index].name} field is required` });
-  }
-  model.setReason = body.Reason;
-  model.setAttachment = body.Attachment;
-  model.setName = body.Name;
-  model.setEmail = body.Email;
-  model.setContact = body.Contact;
-  if (!model.STATUS_ENUM.includes(body.Status)) { return res.status(400).json({ status: 400, error: 'Invalid status' }); }
-  model.setStatus = body.Status;
-  model.setSuggestedDate = body.SuggestedDate;
-  if (body.ConfirmedDate) model.setConfimedDate = body.ConfirmedDate;
-  model.setAddress = body.Address;
-  try {
-    notionRes = await notion.pages.create({
-      parent: {
-        database_id: BOOKING_DB_ID,
-      },
-      properties: model.model,
-    });
-    if (noSerialize === 'true') { return res.status(201).json({ status: 201, data: notionRes }); }
-    return res.status(201).json({ status: 201, data: serializeObject(notionRes) });
-  } catch (error) {
-    return res.status(error.status).json({ status: error.status, error });
-  }
 });
 
 /**
@@ -187,20 +139,13 @@ router.patch('/:id', async (req, res) => {
   const payload = {};
   payload.page_id = id;
   const { body } = req;
-  const model = Booking;
+  const model = Technician;
   if (Object.keys(body).length === 0) { return res.status(400).json({ status: 400, error: 'No JSON body found' }); }
-  if (body.Reason) { model.setReason = body.Reason; }
-  if (body.Attachment) { model.setAttachment = body.Attachment; }
+  if (body.Password) { return res.status(400).json({ status: 400, error: 'Password cant be changed' }); }
   if (body.Name) { model.setName = body.Name; }
-  if (body.Email) { model.setEmail = body.Email; }
+  if (body.LastSeen) { model.setLastSeen = body.LastSeen; }
   if (body.Contact) { model.setContact = body.Contact; }
-  if (body.Status) {
-    if (!model.STATUS_ENUM.includes(body.Status)) { return res.status(400).json({ status: 400, error: 'Invalid status' }); }
-    model.setStatus = body.Status;
-  }
-  if (body.SuggestedDate) { model.setSuggestedDate = body.SuggestedDate; }
-  if (body.ConfirmedDate) { model.setConfimedDate = body.ConfirmedDate; }
-  if (body.Address) { model.setAddress = body.Address; }
+
   try {
     notionRes = await notion.pages.update({
       page_id: id,

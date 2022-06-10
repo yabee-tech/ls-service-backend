@@ -34,6 +34,10 @@ const FIELDS = [
     name: 'ConfirmedDate',
     type: dataTypes.DATE,
   },
+  {
+    name: 'Address',
+    type: dataTypes.RICH_TEXT,
+  },
 ];
 
 const BookingModel = {
@@ -53,6 +57,7 @@ const Booking = {
   get getStatus() { return this.model.Status?.select; },
   get getSuggestedDate() { return this.model.SuggestedDate?.date.start; },
   get getConfimedDate() { return this.model.ConfirmedDate?.date.start; },
+  get getAddress() { return this.model.Address.rich_text[0]?.text.content; },
 
   set setReason(value) {
     this.model.Reason = {
@@ -119,6 +124,19 @@ const Booking = {
         start: value,
         end: null,
       },
+    };
+  },
+  set setAddress(value) {
+    this.model.Address = {
+      rich_text:
+      [
+        {
+          text:
+          {
+            content: value,
+          },
+        },
+      ],
     };
   },
 

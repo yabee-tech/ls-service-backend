@@ -5,6 +5,7 @@ const SECRET = process.env.NOTION_SECRET_DEV;
 const BOOKING_DB_ID = process.env.NOTION_BOOKING_DB_ID_DEV;
 const REPAIR_DB_ID = process.env.NOTION_REPAIR_DB_ID_DEV;
 const FEEDBACK_DB_ID = process.env.NOTION_FEEDBACK_DB_ID_DEV;
+const TECHNICIAN_DB_ID = process.env.NOTION_TECHNICIAN_DB_ID_DEV;
 
 // Initializing a client
 const NOTION = new Client({
@@ -80,6 +81,17 @@ const runBookingMigrations = async () => {
           end: null,
         },
       },
+      Address: {
+        rich_text:
+        [
+          {
+            text:
+            {
+              content: 'addr',
+            },
+          },
+        ],
+      },
     },
   });
 
@@ -139,6 +151,17 @@ const runBookingMigrations = async () => {
           end: null,
         },
       },
+      Address: {
+        rich_text:
+        [
+          {
+            text:
+            {
+              content: 'addr',
+            },
+          },
+        ],
+      },
     },
   });
 };
@@ -164,6 +187,15 @@ const runRepairMigrations = async () => {
     bookingIds.push(booking.id);
   });
 
+  // get technician ids
+  const technicianIds = [];
+  const technicians = await NOTION.databases.query({
+    database_id: TECHNICIAN_DB_ID,
+  });
+  technicians.results.forEach((technician) => {
+    technicianIds.push(technician.id);
+  });
+
   // add sample data
   await NOTION.pages.create({
     parent:
@@ -172,16 +204,10 @@ const runRepairMigrations = async () => {
     },
     properties:
     {
-      TechnicianName:
+      Technician:
       {
-        title:
-        [
-          {
-            text:
-            {
-              content: 'techname',
-            },
-          },
+        relation: [
+          { id: technicianIds[0] },
         ],
       },
 
@@ -190,11 +216,6 @@ const runRepairMigrations = async () => {
         relation: [
           { id: bookingIds[0] },
         ],
-      },
-
-      TechnicianContact:
-      {
-        phone_number: '123456787654',
       },
 
       Status:
@@ -214,16 +235,10 @@ const runRepairMigrations = async () => {
     },
     properties:
     {
-      TechnicianName:
+      Technician:
       {
-        title:
-        [
-          {
-            text:
-            {
-              content: 'techname2',
-            },
-          },
+        relation: [
+          { id: technicianIds[1] },
         ],
       },
 
@@ -232,11 +247,6 @@ const runRepairMigrations = async () => {
         relation: [
           { id: bookingIds[0] },
         ],
-      },
-
-      TechnicianContact:
-      {
-        phone_number: '1234567872654',
       },
 
       Status:
@@ -326,11 +336,132 @@ const runFeedbackMigrations = async () => {
   });
 };
 
+const runTechnicianMigrations = async () => {
+  // get all entries
+  const response = await NOTION.databases.query({
+    database_id: TECHNICIAN_DB_ID,
+  });
+
+  // iterate through the entries
+  response.results.forEach(async (result) => {
+    // delete (archive) the page
+    await NOTION.blocks.delete({ block_id: result.id });
+  });
+
+  // add sample data
+  await NOTION.pages.create({
+    parent:
+    {
+      database_id: TECHNICIAN_DB_ID,
+    },
+    properties:
+    {
+      Name: {
+        title:
+        [
+          {
+            text:
+            {
+              content: 'value name',
+            },
+          },
+        ],
+      },
+
+      Password: {
+        rich_text:
+        [
+          {
+            text:
+            {
+              content: 'pwbashasdasd',
+            },
+          },
+        ],
+      },
+
+      LastSeen: {
+        rich_text:
+        [
+          {
+            text:
+            {
+              content: '123, 456',
+            },
+          },
+        ],
+      },
+
+      Contact: {
+        phone_number: '1234568',
+      },
+    },
+  });
+
+  await NOTION.pages.create({
+    parent:
+    {
+      database_id: TECHNICIAN_DB_ID,
+    },
+    properties:
+    {
+      Name: {
+        title:
+        [
+          {
+            text:
+            {
+              content: '2value name',
+            },
+          },
+        ],
+      },
+
+      Password: {
+        rich_text:
+        [
+          {
+            text:
+            {
+              content: 'pwbash21313asdasd',
+            },
+          },
+        ],
+      },
+
+      LastSeen: {
+        rich_text:
+        [
+          {
+            text:
+            {
+              content: '123, 2456',
+            },
+          },
+        ],
+      },
+
+      Contact: {
+        phone_number: '123451231268',
+      },
+    },
+  });
+};
+
 const runMigrations = async () => {
-  await runBookingMigrations();
-  await runRepairMigrations();
-  await runFeedbackMigrations();
-  console.log('testing migrations done');
+  try {
+    await runBookingMigrations();
+    console.log('booking migrations done');
+    await runTechnicianMigrations();
+    console.log('technician migrations done');
+    await runRepairMigrations();
+    console.log('repair migrations done');
+    await runFeedbackMigrations();
+    console.log('feedback migrations done');
+  } catch (e) {
+    console.log('migration failed');
+    console.log(e);
+  }
 };
 
 runMigrations();

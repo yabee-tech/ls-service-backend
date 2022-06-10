@@ -44,7 +44,7 @@ const repairExists = async (repairId) => {
   const payload = { page_id: repairId };
   try {
     notionRes = await notion.pages.retrieve(payload);
-    if (notionRes && notionRes.parent.database_id.replaceAll('-', '') !== REPAIR_DB_ID) { return false; }
+    if (notionRes && (notionRes.archived || notionRes.parent.database_id.replaceAll('-', '') !== REPAIR_DB_ID)) { return false; }
   } catch (error) {
     return false;
   }

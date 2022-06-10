@@ -6,6 +6,8 @@ const { Client } = require('@notionhq/client');
 const Repair = require('../models/Repair');
 const { fieldExists, generateFilter } = require('../utils/utils');
 
+// TODO update docs on technician relation
+
 /**
  * Takes in a raw notion api object and converts it into a
  * more redable and less verbose json response
@@ -17,9 +19,8 @@ const serializeObject = (raw) => {
   const serializedElem = {};
 
   serializedElem.id = raw.id;
-  serializedElem.TechnicianName = raw.properties.TechnicianName.title[0]?.text.content;
+  serializedElem.Technician = raw.properties.Technician.relation[0]?.id;
   serializedElem.Booking = raw.properties.Booking.relation[0]?.id;
-  serializedElem.TechnicianContact = raw.properties.TechnicianContact?.phone_number;
   serializedElem.Status = raw.properties.Status.select?.name;
   return serializedElem;
 };
@@ -28,6 +29,7 @@ const serializeObject = (raw) => {
 const { ENV } = process.env;
 const SECRET = (ENV === 'dev') ? process.env.NOTION_SECRET_DEV : process.env.NOTION_SECRET;
 const BOOKING_DB_ID = (ENV === 'dev') ? process.env.NOTION_BOOKING_DB_ID_DEV : process.env.NOTION_BOOKING_DB_ID;
+const TECHNICIAN_DB_ID = (ENV === 'dev') ? process.env.NOTION_TECHNICIAN_DB_ID_DEV : process.env.NOTION_TECHNICIAN_DB_ID;
 const REPAIR_DB_ID = (ENV === 'dev') ? process.env.NOTION_REPAIR_DB_ID_DEV : process.env.NOTION_REPAIR_DB_ID;
 
 // const deserializeObject = (raw) => {
@@ -81,7 +83,21 @@ const bookingExists = async (bookingId) => {
   const payload = { page_id: bookingId };
   try {
     notionRes = await notion.pages.retrieve(payload);
-    if (notionRes && notionRes.parent.database_id.replaceAll('-', '') !== BOOKING_DB_ID) { return false; }
+    if (notionRes && (notionRes.archived || notionRes.parent.database_id.replaceAll('-', '') !== BOOKING_DB_ID)) { return false; }
+  } catch (error) {
+    return false;
+  }
+  return true;
+};
+
+// check if technician exists
+const technicianExists = async (technicianId) => {
+  let notionRes;
+
+  const payload = { page_id: technicianId };
+  try {
+    notionRes = await notion.pages.retrieve(payload);
+    if (notionRes && (notionRes.archived || notionRes.parent.database_id.replaceAll('-', '') !== TECHNICIAN_DB_ID)) { return false; }
   } catch (error) {
     return false;
   }
@@ -191,10 +207,10 @@ router.post('/', async (req, res) => {
     if (!body[model.fields[index].name]) return res.status(400).json({ status: 400, error: `${model.fields[index].name} field is required` });
   }
 
-  model.setTechnicianName = body.TechnicianName;
-  if (!await bookingExists(body.Booking)) return res.status(400).json({ status: 404, error: 'Booking does not exist' });
+  if (!await bookingExists(body.Booking)) return res.status(404).json({ status: 404, error: 'Booking does not exist' });
+  if (!await technicianExists(body.Technician)) return res.status(404).json({ status: 404, error: 'Technician does not exist' });
   model.setBooking = body.Booking;
-  model.setTechnicianContact = body.TechnicianContact;
+  model.setTechnician = body.Technician;
   if (!model.STATUS_ENUM.includes(body.Status)) return res.status(400).json({ status: 400, error: 'Invalid status' });
   model.setStatus = body.Status;
 
@@ -227,12 +243,14 @@ router.patch('/:id', async (req, res) => {
   const { noSerialize } = req.query;
   const model = Repair;
   if (Object.keys(body).length === 0) return res.status(400).json({ status: 400, error: 'No JSON body found' });
-  if (body.TechnicianName) model.setTechnicianName = body.TechnicianName;
   if (body.Booking) {
     if (!await bookingExists(body.Booking)) return res.status(400).json({ status: 404, error: 'Booking does not exist' });
     model.setBooking = body.Booking;
   }
-  if (body.TechnicianContact) model.setTechnicianContact = body.TechnicianContact;
+  if (body.Technician) {
+    if (!await technicianExists(body.Technician)) return res.status(400).json({ status: 404, error: 'Technician does not exist' });
+    model.setTechnician = body.Technician;
+  }
   if (body.Status) {
     if (!model.STATUS_ENUM.includes(body.Status)) return res.status(400).json({ status: 400, error: 'Invalid status' });
     model.setStatus = body.Status;
