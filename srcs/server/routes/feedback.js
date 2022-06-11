@@ -17,7 +17,6 @@ const notion = new Client({
   auth: SECRET,
 });
 
-// TODO fix rating not serialIed
 /**
  * Takes in a raw notion api object and converts it into a
  * more redable and less verbose json response
@@ -32,7 +31,7 @@ const serializeObject = (raw) => {
   serializedElem.Attachment = raw.properties.Attachment?.url;
   serializedElem.Repair = raw.properties.Repair.relation[0]?.id;
   serializedElem.Type = raw.properties.Type.select?.name;
-  serializedElem.Rating = raw.properties.Rating.number?.value;
+  serializedElem.Rating = raw.properties.Rating.number;
 
   return serializedElem;
 };

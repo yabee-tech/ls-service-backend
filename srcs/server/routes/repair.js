@@ -6,8 +6,6 @@ const { Client } = require('@notionhq/client');
 const Repair = require('../models/Repair');
 const { fieldExists, generateFilter } = require('../utils/utils');
 
-// TODO update docs on technician relation
-
 /**
  * Takes in a raw notion api object and converts it into a
  * more redable and less verbose json response

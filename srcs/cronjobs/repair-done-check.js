@@ -1,7 +1,52 @@
+const AWS = require('aws-sdk');
 const fs = require('fs');
 const fetch = require('node-fetch');
 const { sendNotification } = require('../bot/actions');
 require('dotenv').config();
+
+const s3 = new AWS.S3({
+  accessKeyId: process.env.AWS_KEY_ID_DEV,
+  secretAccessKey: process.env.AWS_SECRET_DEV,
+});
+
+// helper func to check for diffs
+const checkDiff = (path, encoding, ids) => {
+  let oldIds;
+  let differences;
+
+  fs.readFile(path, encoding, (error, data) => {
+    if (error) { return console.error('Read file : ', error); }
+    oldIds = data.split('\n');
+    differences = ids.filter((x) => !oldIds.includes(x));
+    differences.forEach((element) => {
+      // fet individual contacts via booking
+      const optionsBooking = {
+        method: 'GET',
+        headers: {
+          Accept: 'application/json',
+          'Notion-Version': '2022-02-22',
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${process.env.NOTION_SECRET}`,
+        },
+      };
+      const elemParsed = JSON.parse(element);
+      fetch(`https://api.notion.com/v1/pages/${elemParsed.booking.replace('-/g', '')}`, optionsBooking)
+        .then((res) => res.json())
+        .then((res) => {
+          // need to do result parent db validation
+          if (!res.properties) {
+            elemParsed.Contact = null;
+            return;
+          }
+          elemParsed.Contact = res.properties.Contact?.phone_number;
+          sendNotification(`A repair has been marked as done ✅\n${JSON.stringify(elemParsed)}`);
+        })
+        .catch((e) => console.log('error ', e));
+    });
+    fs.writeFile(path, ids.join('\n'), (writeErr) => (writeErr ? console.error('overwrite file : ', writeErr) : null));
+    return 0;
+  });
+};
 
 // process environment variables
 const { ENV } = process.env;
@@ -23,9 +68,6 @@ const options = {
 fetch(`https://api.notion.com/v1/databases/${REPAIR_DB_ID}/query`, options)
   .then((response) => response.json())
   .then((response) => {
-    let oldIds;
-    let differences;
-
     const ids = [];
 
     // get id array from response
@@ -37,41 +79,19 @@ fetch(`https://api.notion.com/v1/databases/${REPAIR_DB_ID}/query`, options)
     fs.stat('/tmp/repair-done.tmp', (err) => {
       // file exists, extract and deserialize data from temp file and compare with response id
       if (err == null) {
-        fs.readFile('/tmp/repair-done.tmp', 'utf8', (error, data) => {
-          if (error) { return console.error('Read file : ', error); }
-          oldIds = data.split('\n');
-          differences = ids.filter((x) => !oldIds.includes(x));
-          differences.forEach((element) => {
-            // fet individual contacts via booking
-            const optionsBooking = {
-              method: 'GET',
-              headers: {
-                Accept: 'application/json',
-                'Notion-Version': '2022-02-22',
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${process.env.NOTION_SECRET}`,
-              },
-            };
-            const elemParsed = JSON.parse(element);
-            fetch(`https://api.notion.com/v1/pages/${elemParsed.booking.replace('-/g', '')}`, optionsBooking)
-              .then((res) => res.json())
-              .then((res) => {
-                // need to do result parent db validation
-                if (!res.properties) {
-                  elemParsed.Contact = null;
-                  return;
-                }
-                elemParsed.Contact = res.properties.Contact?.phone_number;
-                sendNotification(`A repair has been marked as done ✅\n${JSON.stringify(elemParsed)}`);
-              })
-              .catch((e) => console.log('error ', e));
-          });
-          fs.writeFile('/tmp/repair-done.tmp', ids.join('\n'), (writeErr) => (writeErr ? console.error('overwrite file : ', writeErr) : null));
-          return 0;
-        });
+        checkDiff('/tmp/repair-done.tmp', 'utf8', ids);
       } else if (err.code === 'ENOENT') {
-        // doest exist, create temp file and write serialized idarray to temp file
-        fs.writeFile('/tmp/repair-done.tmp', ids.join('\n'), (writeNewErr) => (writeNewErr ? console.error('Write new file : ', writeNewErr) : null));
+      // dosnt exist, try to download from backup
+        s3.getObject({ Bucket: process.env.AWS_BUCKET_NAME_DEV, Key: '/tmp/repair-done.tmp' }, (s3Err, data) => {
+          if (!s3Err) {
+          // backup exists, write to local
+            console.log('⚠️ Getting temfiles from backup');
+            fs.writeFile('/tmp/repair-done.tmp', data.Body.toString(), (writeErrBackup) => (writeErrBackup ? console.error('Write new file backup : ', writeErrBackup) : null));
+          } else if (s3Err.code === 'NoSuchKey') {
+          // doest exist, create temp file and write serialized idarray to temp file
+            fs.writeFile('/tmp/repair-done.tmp', ids.join('\n'), (writeErrNew) => (writeErrNew ? console.error('Write new file : ', writeErrNew) : null));
+          }
+        });
       } else {
         console.error('fs stat ', err.code);
       }

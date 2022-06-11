@@ -140,7 +140,7 @@ const runBookingMigrations = async () => {
       Status: {
         select:
         {
-          name: '2Pending',
+          name: 'Pending',
         },
       },
 

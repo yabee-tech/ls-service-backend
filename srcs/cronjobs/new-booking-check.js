@@ -1,7 +1,30 @@
+const AWS = require('aws-sdk');
 const fs = require('fs');
 const fetch = require('node-fetch');
 const { sendNotification } = require('../bot/actions');
 require('dotenv').config();
+
+const s3 = new AWS.S3({
+  accessKeyId: process.env.AWS_KEY_ID_DEV,
+  secretAccessKey: process.env.AWS_SECRET_DEV,
+});
+
+// helper function to check for differences
+const checkDiff = (path, encoding, ids) => {
+  let oldIds;
+  let differences;
+
+  fs.readFile(path, encoding, (readErr, data) => {
+    if (readErr) { return console.error('Read file : ', readErr); }
+    oldIds = data.split('\n');
+    differences = ids.filter((x) => !oldIds.includes(x));
+    differences.forEach((element) => {
+      sendNotification(`A new booking has been added ✅\n${element}`);
+    });
+    fs.writeFile(path, ids.join('\n'), (err) => (err ? console.error('overwrite file : ', err) : null));
+    return 0;
+  });
+};
 
 // process environment variables
 const { ENV } = process.env;
@@ -23,9 +46,6 @@ const options = {
 fetch(`https://api.notion.com/v1/databases/${BOOKING_DB_ID}/query`, options)
   .then((response) => response.json())
   .then((response) => {
-    let oldIds;
-    let differences;
-
     const ids = [];
 
     // get id array from response
@@ -37,19 +57,19 @@ fetch(`https://api.notion.com/v1/databases/${BOOKING_DB_ID}/query`, options)
     fs.stat('/tmp/new_bookings.tmp', (statErr) => {
       // file exists, extract and deserialize data from temp file and compare with response id
       if (statErr == null) {
-        fs.readFile('/tmp/new_bookings.tmp', 'utf8', (readErr, data) => {
-          if (readErr) { return console.error('Read file : ', readErr); }
-          oldIds = data.split('\n');
-          differences = ids.filter((x) => !oldIds.includes(x));
-          differences.forEach((element) => {
-            sendNotification(`A new booking has been added ✅\n${element}`);
-          });
-          fs.writeFile('/tmp/new_bookings.tmp', ids.join('\n'), (err) => (err ? console.error('overwrite file : ', err) : null));
-          return 0;
-        });
+        checkDiff('/tmp/new_bookings.tmp', 'utf8', ids);
       } else if (statErr.code === 'ENOENT') {
-        // doest exist, create temp file and write serialized idarray to temp file
-        fs.writeFile('/tmp/new_bookings.tmp', ids.join('\n'), (err) => (err ? console.error('Write new file : ', err) : null));
+        // dosnt exist, try to download from backup
+        s3.getObject({ Bucket: process.env.AWS_BUCKET_NAME_DEV, Key: '/tmp/new_bookings.tmp' }, (err, data) => {
+          if (!err) {
+            // backup exists, write to local
+            console.log('⚠️ Getting temfiles from backup');
+            fs.writeFile('/tmp/new_bookings.tmp', data.Body.toString(), (writeErrBackup) => (writeErrBackup ? console.error('Write new file backup : ', writeErrBackup) : null));
+          } else if (err.code === 'NoSuchKey') {
+            // doest exist, create temp file and write serialized idarray to temp file
+            fs.writeFile('/tmp/new_bookings.tmp', ids.join('\n'), (writeErrNew) => (writeErrNew ? console.error('Write new file : ', writeErrNew) : null));
+          }
+        });
       } else {
         console.error('fs stat ', statErr.code);
       }

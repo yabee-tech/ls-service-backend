@@ -16,8 +16,6 @@ const notion = new Client({
   auth: SECRET,
 });
 
-// @TODO update docs for address dield
-
 /**
  * Takes in a raw notion api object and converts it into a
  * more redable and less verbose json response

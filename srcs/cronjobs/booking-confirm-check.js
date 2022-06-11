@@ -1,7 +1,30 @@
+const AWS = require('aws-sdk');
 const fs = require('fs');
 const fetch = require('node-fetch');
 const { sendNotification } = require('../bot/actions');
 require('dotenv').config();
+
+const s3 = new AWS.S3({
+  accessKeyId: process.env.AWS_KEY_ID_DEV,
+  secretAccessKey: process.env.AWS_SECRET_DEV,
+});
+
+// helper function to check for differences
+const checkDiff = (path, encoding, ids) => {
+  let oldIds;
+  let differences;
+
+  fs.readFile(path, encoding, (error, data) => {
+    if (error) { return console.error('Read file : ', error); }
+    oldIds = data.split('\n');
+    differences = ids.filter((x) => !oldIds.includes(x));
+    differences.forEach((element) => {
+      sendNotification(`A booking has been confirmed ✅\n${element}`);
+    });
+    fs.writeFile(path, ids.join('\n'), (writeErr) => (writeErr ? console.error('overwrite file : ', writeErr) : null));
+    return 0;
+  });
+};
 
 // process environment variables
 const { ENV } = process.env;
@@ -23,9 +46,6 @@ const options = {
 fetch(`https://api.notion.com/v1/databases/${BOOKING_DB_ID}/query`, options)
   .then((response) => response.json())
   .then((response) => {
-    let oldIds;
-    let differences;
-
     const ids = [];
 
     // get id array from response
@@ -37,19 +57,19 @@ fetch(`https://api.notion.com/v1/databases/${BOOKING_DB_ID}/query`, options)
     fs.stat('/tmp/booking-confirmed.tmp', (err) => {
       // file exists, extract and deserialize data from temp file and compare with response id
       if (err == null) {
-        fs.readFile('/tmp/booking-confirmed.tmp', 'utf8', (error, data) => {
-          if (error) { return console.error('Read file : ', error); }
-          oldIds = data.split('\n');
-          differences = ids.filter((x) => !oldIds.includes(x));
-          differences.forEach((element) => {
-            sendNotification(`A booking has been confirmed ✅\n${element}`);
-          });
-          fs.writeFile('/tmp/booking-confirmed.tmp', ids.join('\n'), (writeErr) => (writeErr ? console.error('overwrite file : ', writeErr) : null));
-          return 0;
-        });
+        checkDiff('/tmp/booking-confirmed.tmp', 'utf8', ids);
       } else if (err.code === 'ENOENT') {
-        // doest exist, create temp file and write serialized idarray to temp file
-        fs.writeFile('/tmp/booking-confirmed.tmp', ids.join('\n'), (writeNewErr) => (writeNewErr ? console.error('Write new file : ', writeNewErr) : null));
+        // dosnt exist, try to download from backup
+        s3.getObject({ Bucket: process.env.AWS_BUCKET_NAME_DEV, Key: '/tmp/booking-confirmed.tmp' }, (s3Err, data) => {
+          if (!s3Err) {
+            // backup exists, write to local
+            console.log('⚠️ Getting temfiles from backup');
+            fs.writeFile('/tmp/booking-confirmed.tmp', data.Body.toString(), (writeErrBackup) => (writeErrBackup ? console.error('Write new file backup : ', writeErrBackup) : null));
+          } else if (s3Err.code === 'NoSuchKey') {
+            // doest exist, create temp file and write serialized idarray to temp file
+            fs.writeFile('/tmp/booking-confirmed.tmp', ids.join('\n'), (writeErrNew) => (writeErrNew ? console.error('Write new file : ', writeErrNew) : null));
+          }
+        });
       } else {
         console.error('fs stat ', err.code);
       }

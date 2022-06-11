@@ -12,6 +12,7 @@ const bookingRoutes = require('./routes/bookings');
 const repairRoutes = require('./routes/repair');
 const feedbackRoutes = require('./routes/feedback');
 const technicianRoutes = require('./routes/technician');
+const authRoutes = require('./routes/auth');
 
 // json middleware
 app.use(express.json());
@@ -24,6 +25,7 @@ app.use('/api/v1/bookings', bookingRoutes);
 app.use('/api/v1/repairs', repairRoutes);
 app.use('/api/v1/feedbacks', feedbackRoutes);
 app.use('/api/v1/technicians', technicianRoutes);
+app.use('/api/v1/auth', authRoutes);
 
 // 404 route
 app.get('*', (req, res) => {
