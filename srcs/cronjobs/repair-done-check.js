@@ -1,7 +1,7 @@
 const AWS = require('aws-sdk');
 const fs = require('fs');
 const fetch = require('node-fetch');
-const { sendNotification } = require('../bot/actions');
+const { sendRepairDoneNotification } = require('../bot/actions');
 require('dotenv').config();
 
 const s3 = new AWS.S3({
@@ -39,7 +39,7 @@ const checkDiff = (path, encoding, ids) => {
             return;
           }
           elemParsed.Contact = res.properties.Contact?.phone_number;
-          sendNotification(`A repair has been marked as done ✅\n${JSON.stringify(elemParsed)}`);
+          sendRepairDoneNotification(elemParsed);
         })
         .catch((e) => console.log('error ', e));
     });

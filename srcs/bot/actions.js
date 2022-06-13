@@ -1,24 +1,95 @@
 const { bot } = require('./telegram');
 const { notion, SUBSCRIBER_DB_ID } = require('./notion');
 
-async function sendNotification(message) {
+async function getSubscribers() {
   // fetch subscribers
   const res = await notion.databases.query({ database_id: SUBSCRIBER_DB_ID });
   const subscribers = res.results;
 
   // handle no subscribers
   if (subscribers.length === 0) {
-    console.error('Notification not sent: there are 0 subscribers');
-    return;
+    throw new Error('No subscribers found');
   }
 
-  // send message to every subscriber
-  subscribers.forEach((result) => {
-    const chatId = result.properties.ChatID.rich_text[0].text.content;
-    bot.telegram.sendMessage(chatId, message);
-  });
-
-  console.log(`Notification sent to ${subscribers.length} subscribers`);
+  return subscribers;
 }
 
-module.exports = { sendNotification };
+async function sendNotification(message) {
+  try {
+    // fetch subscribers from Notion db
+    const subscribers = await getSubscribers();
+
+    // send message to every subscriber
+    subscribers.forEach((result) => {
+      if (result.properties.ChatID && result.properties.ChatID.rich_text) {
+        const chatId = result.properties.ChatID.rich_text[0].text.content;
+        bot.telegram.sendMessage(chatId, message);
+      }
+    });
+
+    console.log(`Notification sent to ${subscribers.length} subscribers`);
+  } catch (err) {
+    console.error('Notification not sent: there are 0 subscribers');
+  }
+}
+
+async function sendBookingConfirmedNotification(booking) {
+  try {
+    // fetch subscribers from Notion db
+    const subscribers = await getSubscribers();
+
+    // do something on each subscriber
+    subscribers.forEach((result) => {
+      if (result.properties.ChatID && result.properties.ChatID.rich_text) {
+        const chatId = result.properties.ChatID.rich_text[0].text.content;
+        // TODO: format this message
+        bot.telegram.sendMessage(chatId, JSON.stringify(booking));
+      }
+    });
+  } catch (err) {
+    console.error('Notification not sent: there are 0 subscribers');
+  }
+}
+
+async function sendNewBookingNotification(booking) {
+  try {
+    // fetch subscribers from Notion db
+    const subscribers = await getSubscribers();
+
+    // do something on each subscriber
+    subscribers.forEach((result) => {
+      if (result.properties.ChatID && result.properties.ChatID.rich_text) {
+        const chatId = result.properties.ChatID.rich_text[0].text.content;
+        // TODO: format this message
+        bot.telegram.sendMessage(chatId, JSON.stringify(booking));
+      }
+    });
+  } catch (err) {
+    console.error('Notification not sent: there are 0 subscribers');
+  }
+}
+
+async function sendRepairDoneNotification(repair) {
+  try {
+    // fetch subscribers from Notion db
+    const subscribers = await getSubscribers();
+
+    // do something on each subscriber
+    subscribers.forEach((result) => {
+      if (result.properties.ChatID && result.properties.ChatID.rich_text) {
+        const chatId = result.properties.ChatID.rich_text[0].text.content;
+        // TODO: format this message
+        bot.telegram.sendMessage(chatId, JSON.stringify(repair));
+      }
+    });
+  } catch (err) {
+    console.error('Notification not sent: there are 0 subscribers');
+  }
+}
+
+module.exports = {
+  sendNotification,
+  sendBookingConfirmedNotification,
+  sendNewBookingNotification,
+  sendRepairDoneNotification,
+};

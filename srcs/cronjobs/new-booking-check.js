@@ -1,7 +1,7 @@
 const AWS = require('aws-sdk');
 const fs = require('fs');
 const fetch = require('node-fetch');
-const { sendNotification } = require('../bot/actions');
+const { sendNewBookingNotification } = require('../bot/actions');
 require('dotenv').config();
 
 const s3 = new AWS.S3({
@@ -19,7 +19,7 @@ const checkDiff = (path, encoding, ids) => {
     oldIds = data.split('\n');
     differences = ids.filter((x) => !oldIds.includes(x));
     differences.forEach((element) => {
-      sendNotification(`A new booking has been added ✅\n${element}`);
+      sendNewBookingNotification(element);
     });
     fs.writeFile(path, ids.join('\n'), (err) => (err ? console.error('overwrite file : ', err) : null));
     return 0;
