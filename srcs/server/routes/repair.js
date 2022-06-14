@@ -17,9 +17,9 @@ const serializeObject = (raw) => {
   const serializedElem = {};
 
   serializedElem.id = raw.id;
-  serializedElem.Technician = raw.properties.Technician.relation[0]?.id;
-  serializedElem.Booking = raw.properties.Booking.relation[0]?.id;
-  serializedElem.Status = raw.properties.Status.select?.name;
+  serializedElem.Technician = raw.properties.Technician.relation[0]?.id ?? null;
+  serializedElem.Booking = raw.properties.Booking.relation[0]?.id ?? null;
+  serializedElem.Status = raw.properties.Status.select?.name ?? null;
   return serializedElem;
 };
 

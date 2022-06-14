@@ -26,15 +26,15 @@ const notion = new Client({
 const serializeObject = (raw) => {
   const serializedElem = {};
   serializedElem.id = raw.id;
-  serializedElem.Reason = raw.properties.Reason.title[0]?.text.content;
-  serializedElem.Attachment = raw.properties.Attachment?.url;
-  serializedElem.Name = raw.properties.Name.rich_text[0]?.text.content;
-  serializedElem.Email = raw.properties.Email?.email;
-  serializedElem.Contact = raw.properties.Contact?.phone_number;
-  serializedElem.Status = raw.properties.Status.select?.name;
-  serializedElem.SuggestedDate = raw.properties.SuggestedDate.date?.start;
-  serializedElem.ConfirmedDate = raw.properties.ConfirmedDate.date?.start;
-  serializedElem.Address = raw.properties.Address.rich_text[0]?.text.content;
+  serializedElem.Reason = raw.properties.Reason.title[0]?.text.content ?? null;
+  serializedElem.Attachment = raw.properties.Attachment?.url ?? null;
+  serializedElem.Name = raw.properties.Name.rich_text[0]?.text.content ?? null;
+  serializedElem.Email = raw.properties.Email?.email ?? null;
+  serializedElem.Contact = raw.properties.Contact?.phone_number ?? null;
+  serializedElem.Status = raw.properties.Status.select?.name ?? null;
+  serializedElem.SuggestedDate = raw.properties.SuggestedDate.date?.start ?? null;
+  serializedElem.ConfirmedDate = raw.properties.ConfirmedDate.date?.start ?? null;
+  serializedElem.Address = raw.properties.Address.rich_text[0]?.text.content ?? null;
 
   return serializedElem;
 };
