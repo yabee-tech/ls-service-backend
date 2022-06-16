@@ -25,7 +25,7 @@ async function sendNotification(message) {
         const chatId = result.properties.ChatID.rich_text[0].text.content;
         bot.telegram.sendMessage(chatId, message);
       } else {
-        console.log(result.properties.ChatID);
+        console.log(result.properties);
         throw new Error('subscriber has no ChatID');
       }
     });
@@ -52,7 +52,7 @@ async function sendBookingConfirmedNotification(booking) {
         // TODO: format this message
         bot.telegram.sendMessage(chatId, JSON.stringify(booking));
       } else {
-        console.log(result.properties.ChatID);
+        console.log(result.properties);
         throw new Error('subscriber has no ChatID');
       }
     });
@@ -77,7 +77,7 @@ async function sendNewBookingNotification(booking) {
         // TODO: format this message
         bot.telegram.sendMessage(chatId, JSON.stringify(booking));
       } else {
-        console.log(result.properties.ChatID);
+        console.log(result.properties);
         throw new Error('subscriber has no ChatID');
       }
     });
@@ -102,7 +102,7 @@ async function sendRepairDoneNotification(repair) {
         // TODO: format this message
         bot.telegram.sendMessage(chatId, JSON.stringify(repair));
       } else {
-        console.log(result.properties.ChatID);
+        console.log(result.properties);
         throw new Error('subscriber has no ChatID');
       }
     });
