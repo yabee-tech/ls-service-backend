@@ -24,12 +24,19 @@ async function sendNotification(message) {
       if (result.properties.ChatID && result.properties.ChatID.rich_text) {
         const chatId = result.properties.ChatID.rich_text[0].text.content;
         bot.telegram.sendMessage(chatId, message);
+      } else {
+        console.log(result.properties.ChatID);
+        throw new Error('subscriber has no ChatID');
       }
     });
 
     console.log(`Notification sent to ${subscribers.length} subscribers`);
   } catch (err) {
-    console.error('Notification not sent: there are 0 subscribers');
+    if (err.message.includes('ChatID')) {
+      console.error('Notification not sent: subscriber has no ChatID');
+    } else {
+      console.error('Notification not sent: there are 0 subscribers');
+    }
   }
 }
 
@@ -44,10 +51,17 @@ async function sendBookingConfirmedNotification(booking) {
         const chatId = result.properties.ChatID.rich_text[0].text.content;
         // TODO: format this message
         bot.telegram.sendMessage(chatId, JSON.stringify(booking));
+      } else {
+        console.log(result.properties.ChatID);
+        throw new Error('subscriber has no ChatID');
       }
     });
   } catch (err) {
-    console.error('Notification not sent: there are 0 subscribers');
+    if (err.message.includes('ChatID')) {
+      console.error('Notification not sent: subscriber has no ChatID');
+    } else {
+      console.error('Notification not sent: there are 0 subscribers');
+    }
   }
 }
 
@@ -62,10 +76,17 @@ async function sendNewBookingNotification(booking) {
         const chatId = result.properties.ChatID.rich_text[0].text.content;
         // TODO: format this message
         bot.telegram.sendMessage(chatId, JSON.stringify(booking));
+      } else {
+        console.log(result.properties.ChatID);
+        throw new Error('subscriber has no ChatID');
       }
     });
   } catch (err) {
-    console.error('Notification not sent: there are 0 subscribers');
+    if (err.message.includes('ChatID')) {
+      console.error('Notification not sent: subscriber has no ChatID');
+    } else {
+      console.error('Notification not sent: there are 0 subscribers');
+    }
   }
 }
 
@@ -80,10 +101,17 @@ async function sendRepairDoneNotification(repair) {
         const chatId = result.properties.ChatID.rich_text[0].text.content;
         // TODO: format this message
         bot.telegram.sendMessage(chatId, JSON.stringify(repair));
+      } else {
+        console.log(result.properties.ChatID);
+        throw new Error('subscriber has no ChatID');
       }
     });
   } catch (err) {
-    console.error('Notification not sent: there are 0 subscribers');
+    if (err.message.includes('ChatID')) {
+      console.error('Notification not sent: subscriber has no ChatID');
+    } else {
+      console.error('Notification not sent: there are 0 subscribers');
+    }
   }
 }
 
