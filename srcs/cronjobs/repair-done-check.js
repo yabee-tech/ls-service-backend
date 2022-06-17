@@ -30,6 +30,10 @@ const checkDiff = (path, encoding, ids) => {
         },
       };
       const elemParsed = JSON.parse(element);
+      if (!elemParsed.booking) {
+        console.error('Repair has no booking', elemParsed.id);
+        return;
+      }
       fetch(`https://api.notion.com/v1/pages/${elemParsed.booking.replace('-/g', '')}`, optionsBooking)
         .then((res) => res.json())
         .then((res) => {
@@ -72,7 +76,7 @@ fetch(`https://api.notion.com/v1/databases/${REPAIR_DB_ID}/query`, options)
 
     // get id array from response
     response.results?.map((result) => ids.push(JSON.stringify(
-      { id: result.id, booking: result.properties.Booking?.relation[0]?.id },
+      { id: result.id, booking: result.properties.Booking?.relation[0]?.id, raw: result },
     )));
 
     // check if temp file exists
