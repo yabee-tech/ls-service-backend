@@ -1,5 +1,7 @@
 const { bot } = require('./telegram');
 const { notion, SUBSCRIBER_DB_ID } = require('./notion');
+const { twilio, TWILIO_MESSAGING_SERVICE_SID } = require('./twilio');
+const { getFormattedPhoneNumber } = require('./utils');
 
 async function getSubscribers() {
   // fetch subscribers
@@ -12,6 +14,24 @@ async function getSubscribers() {
   }
 
   return subscribers;
+}
+
+async function sendSMSNotification(phoneNumber, message) {
+  // send SMS message with twilio
+  const { errorCode, errorMessage } = await twilio
+    .messages
+    .create({
+      messagingServiceSid: TWILIO_MESSAGING_SERVICE_SID,
+      to: getFormattedPhoneNumber(phoneNumber),
+      body: message,
+    });
+
+  // handle the error returned
+  if (errorCode && errorMessage) {
+    console.error(`Notification not sent: failed to send SMS on twilio, Code (${errorCode}) - ${errorMessage}`);
+  } else {
+    console.log(`SMS sent to ${phoneNumber}`);
+  }
 }
 
 async function sendNotification(message) {
@@ -116,6 +136,7 @@ async function sendRepairDoneNotification(repair) {
 }
 
 module.exports = {
+  sendSMSNotification,
   sendNotification,
   sendBookingConfirmedNotification,
   sendNewBookingNotification,

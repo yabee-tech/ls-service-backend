@@ -63,7 +63,7 @@ fetch(`https://api.notion.com/v1/databases/${BOOKING_DB_ID}/query`, options)
         s3.getObject({ Bucket: process.env.AWS_BUCKET_NAME_DEV, Key: '/tmp/new_bookings.tmp' }, (err, data) => {
           if (!err) {
             // backup exists, write to local
-            console.log('⚠️ Getting temfiles from backup');
+            console.log('⚠️ Getting tempfiles from backup');
             fs.writeFile('/tmp/new_bookings.tmp', data.Body.toString(), (writeErrBackup) => (writeErrBackup ? console.error('Write new file backup : ', writeErrBackup) : null));
           } else if (err.code === 'NoSuchKey') {
             // doest exist, create temp file and write serialized idarray to temp file
