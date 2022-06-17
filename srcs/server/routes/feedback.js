@@ -27,11 +27,11 @@ const notion = new Client({
 const serializeObject = (raw) => {
   const serializedElem = {};
   serializedElem.id = raw.id;
-  serializedElem.Remarks = raw.properties.Remarks.title[0]?.text.content;
-  serializedElem.Attachment = raw.properties.Attachment?.url;
-  serializedElem.Repair = raw.properties.Repair.relation[0]?.id;
-  serializedElem.Type = raw.properties.Type.select?.name;
-  serializedElem.Rating = raw.properties.Rating.number;
+  serializedElem.Remarks = raw.properties.Remarks.title[0]?.text.content ?? null;
+  serializedElem.Attachment = raw.properties.Attachment?.url ?? null;
+  serializedElem.Repair = raw.properties.Repair.relation[0]?.id ?? null;
+  serializedElem.Type = raw.properties.Type.select?.name ?? null;
+  serializedElem.Rating = raw.properties.Rating.number ?? null;
 
   return serializedElem;
 };

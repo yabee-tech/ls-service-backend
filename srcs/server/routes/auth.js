@@ -27,9 +27,9 @@ const notion = new Client({
 const serializeObject = (raw) => {
   const serializedElem = {};
   serializedElem.id = raw.id;
-  serializedElem.Name = raw.properties.Name.title[0]?.text.content;
-  serializedElem.LastSeen = raw.properties.LastSeen.rich_text[0]?.text.content;
-  serializedElem.Contact = raw.properties.Contact?.phone_number;
+  serializedElem.Name = raw.properties.Name.title[0]?.text.content ?? null;
+  serializedElem.LastSeen = raw.properties.LastSeen.rich_text[0]?.text.content ?? null;
+  serializedElem.Contact = raw.properties.Contact?.phone_number ?? null;
 
   return serializedElem;
 };

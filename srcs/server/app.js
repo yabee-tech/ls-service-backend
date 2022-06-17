@@ -2,6 +2,7 @@
 // import required libraries and instansiate express app
 const express = require('express');
 const morgan = require('morgan');
+const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
@@ -19,6 +20,9 @@ app.use(express.json());
 
 // logging
 app.use(morgan('combined'));
+
+// cors
+app.use(cors({ origin: '*' }));
 
 // routes
 app.use('/api/v1/bookings', bookingRoutes);
