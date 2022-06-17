@@ -50,7 +50,7 @@ fetch(`https://api.notion.com/v1/databases/${BOOKING_DB_ID}/query`, options)
 
     // get id array from response
     response.results?.map((result) => ids.push(JSON.stringify(
-      { id: result.id, contact: result.properties.Contact?.phone_number },
+      { id: result.id, contact: result.properties.Contact?.phone_number, raw: result },
     )));
 
     // check if temp file exists

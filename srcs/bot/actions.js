@@ -3,6 +3,47 @@ const { notion, SUBSCRIBER_DB_ID } = require('./notion');
 const { twilio, TWILIO_MESSAGING_SERVICE_SID } = require('./twilio');
 const { getFormattedPhoneNumber } = require('./utils');
 
+function generateNewBookingMessage(raw) {
+  const rawObj = JSON.parse(raw);
+  const res = `
+  ID: ${rawObj.id}
+  Contact Number: ${rawObj.contact}
+  Address: ${rawObj.raw.properties.Address.rich_text[0]?.text.content}
+  Email: ${rawObj.raw.properties.Email?.email}
+  Status: ${rawObj.raw.properties.Status?.select.name}
+  SuggestedDate: ${rawObj.raw.properties.SuggestedDate.date?.start}
+  ConfirmedDate: ${rawObj.raw.properties.ConfirmedDate.date?.start}
+  `;
+
+  return res;
+}
+
+async function generateNewRepairMessage(raw) {
+  const rawObj = raw;
+  let techUrl;
+  let bookingUrl;
+
+  if (rawObj.raw.properties.Technician) {
+    techUrl = await notion.pages.retrieve(
+      {
+        page_id: rawObj.raw.properties.Technician.relation[0].id,
+      },
+    );
+  }
+  if (rawObj.raw.properties.Booking) {
+    bookingUrl = await notion.pages.retrieve(
+      { page_id: rawObj.raw.properties.Booking.relation[0].id },
+    );
+  }
+  const res = `
+  ID: ${rawObj.id}
+  Technician: ${techUrl.url}
+  Booking: ${bookingUrl.url}
+  `;
+
+  return res;
+}
+
 async function getSubscribers() {
   // fetch subscribers
   const res = await notion.databases.query({ database_id: SUBSCRIBER_DB_ID });
@@ -70,7 +111,7 @@ async function sendBookingConfirmedNotification(booking) {
       if (result.properties.ChatID && result.properties.ChatID.rich_text) {
         const chatId = result.properties.ChatID.rich_text[0].text.content;
         // TODO: format this message
-        bot.telegram.sendMessage(chatId, JSON.stringify(booking));
+        bot.telegram.sendMessage(chatId, `Booking confirmed\n${generateNewBookingMessage(booking)}`);
       } else {
         console.log(result.properties);
         throw new Error('subscriber has no ChatID');
@@ -95,7 +136,7 @@ async function sendNewBookingNotification(booking) {
       if (result.properties.ChatID && result.properties.ChatID.rich_text) {
         const chatId = result.properties.ChatID.rich_text[0].text.content;
         // TODO: format this message
-        bot.telegram.sendMessage(chatId, JSON.stringify(booking));
+        bot.telegram.sendMessage(chatId, `New booking\n${generateNewBookingMessage(booking)}`);
       } else {
         console.log(result.properties);
         throw new Error('subscriber has no ChatID');
@@ -111,6 +152,7 @@ async function sendNewBookingNotification(booking) {
 }
 
 async function sendRepairDoneNotification(repair) {
+  const repairMsg = await generateNewRepairMessage(repair);
   try {
     // fetch subscribers from Notion db
     const subscribers = await getSubscribers();
@@ -120,7 +162,7 @@ async function sendRepairDoneNotification(repair) {
       if (result.properties.ChatID && result.properties.ChatID.rich_text) {
         const chatId = result.properties.ChatID.rich_text[0].text.content;
         // TODO: format this message
-        bot.telegram.sendMessage(chatId, JSON.stringify(repair));
+        bot.telegram.sendMessage(chatId, repairMsg);
       } else {
         console.log(result.properties);
         throw new Error('subscriber has no ChatID');
