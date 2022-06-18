@@ -13,7 +13,7 @@ function generateNewBookingMessage(raw) {
   Email: ${rawObj.raw.properties.Email?.email}
   Status: ${rawObj.raw.properties.Status?.select.name}
   SuggestedDate: ${rawObj.raw.properties.SuggestedDate.date?.start}
-  ConfirmedDate: ${rawObj.raw.properties.ConfirmedDate.date?.start}
+  ConfirmedDate: ${rawObj.raw.properties.ConfirmedDate ? rawObj.raw.properties.ConfirmedDate.date?.start : 'no confirmed date yet'}
   `;
 
   return res;
@@ -113,7 +113,7 @@ async function sendBookingConfirmedNotification(booking) {
       if (result.properties.ChatID && result.properties.ChatID.rich_text) {
         const chatId = result.properties.ChatID.rich_text[0].text.content;
         const rawObj = JSON.parse(booking);
-        sendSMSNotification(rawObj.contact, `Dear ${rawObj.raw.properties.Name.rich_text[0]?.text.content}, your booking on ${rawObj.properties.ConfirmedDate.date?.start} has been confirmed. Check out https://ls-service-frontend.vercel.app/booking/${rawObj.id} for latest updates!`);
+        sendSMSNotification(rawObj.contact, `Dear ${rawObj.raw.properties.Name.rich_text[0]?.text.content}, your booking on ${rawObj.raw.properties.ConfirmedDate ? rawObj.raw.properties.ConfirmedDate.date?.start : 'no confirmed date yet'} has been confirmed. Check out https://ls-service-frontend.vercel.app/booking/${rawObj.id} for latest updates!`);
         bot.telegram.sendMessage(chatId, `Booking confirmed\n${generateNewBookingMessage(booking)}`);
       } else {
         console.log(result.properties);
@@ -143,7 +143,7 @@ async function sendNewBookingNotification(booking) {
         let title = 'New Booking';
         if (rawObj.raw.properties.Status?.select.name === 'Confirmed') {
           title = 'Booking Confirmed!';
-          sendSMSNotification(rawObj.contact, `Dear ${rawObj.raw.properties.Name.rich_text[0]?.text.content}, your booking on ${rawObj.properties.ConfirmedDate.date?.start} has been confirmed. Check out https://ls-service-frontend.vercel.app/booking/${rawObj.id} for latest updates!`);
+          sendSMSNotification(rawObj.contact, `Dear ${rawObj.raw.properties.Name.rich_text[0]?.text.content}, your booking on ${rawObj.raw.properties.ConfirmedDate ? rawObj.raw.properties.ConfirmedDate.date?.start : 'no confirmed date yet'} has been confirmed. Check out https://ls-service-frontend.vercel.app/booking/${rawObj.id} for latest updates!`);
         } else {
           sendSMSNotification(rawObj.contact, `Dear ${rawObj.raw.properties.Name.rich_text[0]?.text.content}, you had just made a service booking with LS Smart Machinery, our staff will contact you soon. Meanwhile, check out https://ls-service-frontend.vercel.app/booking/${rawObj.id} for latest updates on your booking.`);
         }
