@@ -94,6 +94,7 @@ async function sendNotification(message) {
 
     console.log(`Notification sent to ${subscribers.length} subscribers`);
   } catch (err) {
+    console.error(err);
     if (err.message.includes('ChatID')) {
       console.error('Notification not sent: subscriber has no ChatID');
     } else {
@@ -120,6 +121,7 @@ async function sendBookingConfirmedNotification(booking) {
       }
     });
   } catch (err) {
+    console.error(err);
     if (err.message.includes('ChatID')) {
       console.error('Notification not sent: subscriber has no ChatID');
     } else {
@@ -152,6 +154,7 @@ async function sendNewBookingNotification(booking) {
       }
     });
   } catch (err) {
+    console.error(err);
     if (err.message.includes('ChatID')) {
       console.error('Notification not sent: subscriber has no ChatID');
     } else {
@@ -177,6 +180,7 @@ async function sendRepairDoneNotification(repair) {
       }
     });
   } catch (err) {
+    console.error(err);
     if (err.message.includes('ChatID')) {
       console.error('Notification not sent: subscriber has no ChatID');
     } else {
