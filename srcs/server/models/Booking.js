@@ -15,6 +15,10 @@ const FIELDS = [
     type: dataTypes.RICH_TEXT,
   },
   {
+    name: 'CompanyName',
+    type: dataTypes.RICH_TEXT,
+  },
+  {
     name: 'Email',
     type: dataTypes.EMAIL,
   },
@@ -35,6 +39,10 @@ const FIELDS = [
     type: dataTypes.DATE,
   },
   {
+    name: 'ConfirmedTime',
+    type: dataTypes.RICH_TEXT,
+  },
+  {
     name: 'Address',
     type: dataTypes.RICH_TEXT,
   },
@@ -52,11 +60,13 @@ const Booking = {
   get getReason() { return this.model.Reason?.title[0].text.content; },
   get getAttachment() { return this.model.Attachment?.url; },
   get getName() { return this.model.Name.rich_text[0]?.text.content; },
+  get getCompanyName() { return this.model.CompanyName.rich_text[0]?.text.content; },
   get getEmail() { return this.model.Email?.email; },
   get getContact() { return this.model.Contact?.phone_number; },
   get getStatus() { return this.model.Status?.select; },
   get getSuggestedDate() { return this.model.SuggestedDate?.date.start; },
   get getConfimedDate() { return this.model.ConfirmedDate?.date.start; },
+  get getConfirmedTime() { return this.model.ConfirmedTime.rich_text[0]?.text.content; },
   get getAddress() { return this.model.Address.rich_text[0]?.text.content; },
 
   set setReason(value) {
@@ -79,6 +89,19 @@ const Booking = {
   },
   set setName(value) {
     this.model.Name = {
+      rich_text:
+      [
+        {
+          text:
+          {
+            content: value,
+          },
+        },
+      ],
+    };
+  },
+  set setCompanyName(value) {
+    this.model.CompanyName = {
       rich_text:
       [
         {
@@ -117,7 +140,7 @@ const Booking = {
       },
     };
   },
-  set setConfimedDate(value) {
+  set setConfirmedDate(value) {
     this.model.ConfirmedDate = {
       date:
       {
@@ -126,6 +149,20 @@ const Booking = {
       },
     };
   },
+  set setConfirmedTime(value) {
+    this.model.ConfirmedTime = {
+      rich_text:
+      [
+        {
+          text:
+          {
+            content: value,
+          },
+        },
+      ],
+    };
+  },
+
   set setAddress(value) {
     this.model.Address = {
       rich_text:
