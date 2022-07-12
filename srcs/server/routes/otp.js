@@ -11,6 +11,7 @@ const phoneUtil = require('google-libphonenumber').PhoneNumberUtil.getInstance()
 const router = express.Router();
 const { Client } = require('@notionhq/client');
 const OTP = require('../models/OTP');
+const { sendSMSNotification } = require('../../bot/actions');
 
 // TODO Update docs on new routes
 
@@ -38,6 +39,9 @@ const OTP_DB_ID = (ENV === 'dev') ? process.env.NOTION_OTP_DB_ID_DEV : process.e
 // To add minutes to the current time
 const AddMinutesToDate = (date, minutes) => new Date(date.getTime() + minutes * 60000);
 
+// The expiration time in minutes
+const OTP_EXPIRATION_TIME = 10;
+
 const notion = new Client({
   auth: SECRET,
 });
@@ -50,7 +54,7 @@ router.post('/phoneNumber', async (req, res) => {
 
     // generate ex date
     const now = new Date();
-    const expirationTime = AddMinutesToDate(now, 10);
+    const expirationTime = AddMinutesToDate(now, OTP_EXPIRATION_TIME);
 
     // generate OTP
     const otp = otpGenerator.generate(4, {
@@ -89,6 +93,7 @@ router.post('/phoneNumber', async (req, res) => {
 
     // send otp
     console.log(`Sending OTP of ${otp} to ${formattedPhoneNumber}...`);
+    await sendSMSNotification(formattedPhoneNumber, `Your OTP for LS Machinery's App is ${otp}`);
 
     return res.status(200).json({
       status: 201,
