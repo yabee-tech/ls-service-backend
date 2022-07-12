@@ -36,6 +36,7 @@
     "otp-generator": "^4.0.0",
     "supertest": "^6.2.3",
     "telegraf": "^4.8.3",
+    "twilio": "^3.77.3",
     "zod": "^3.15.1"
   },
   "devDependencies": {

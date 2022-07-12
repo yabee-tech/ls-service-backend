@@ -30,6 +30,10 @@ const checkDiff = (path, encoding, ids) => {
         },
       };
       const elemParsed = JSON.parse(element);
+      if (!elemParsed.booking) {
+        console.error('Repair has no booking', elemParsed.id);
+        return;
+      }
       fetch(`https://api.notion.com/v1/pages/${elemParsed.booking.replace('-/g', '')}`, optionsBooking)
         .then((res) => res.json())
         .then((res) => {
@@ -72,7 +76,7 @@ fetch(`https://api.notion.com/v1/databases/${REPAIR_DB_ID}/query`, options)
 
     // get id array from response
     response.results?.map((result) => ids.push(JSON.stringify(
-      { id: result.id, booking: result.properties.Booking?.relation[0]?.id },
+      { id: result.id, booking: result.properties.Booking?.relation[0]?.id, raw: result },
     )));
 
     // check if temp file exists
@@ -85,7 +89,7 @@ fetch(`https://api.notion.com/v1/databases/${REPAIR_DB_ID}/query`, options)
         s3.getObject({ Bucket: process.env.AWS_BUCKET_NAME_DEV, Key: '/tmp/repair-done.tmp' }, (s3Err, data) => {
           if (!s3Err) {
           // backup exists, write to local
-            console.log('⚠️ Getting temfiles from backup');
+            console.log('⚠️ Getting tempfiles from backup');
             fs.writeFile('/tmp/repair-done.tmp', data.Body.toString(), (writeErrBackup) => (writeErrBackup ? console.error('Write new file backup : ', writeErrBackup) : null));
           } else if (s3Err.code === 'NoSuchKey') {
           // doest exist, create temp file and write serialized idarray to temp file
