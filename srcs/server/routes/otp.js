@@ -5,6 +5,8 @@ const CryptoJS = require('crypto-js');
 const {
   genSaltSync, hashSync, compareSync,
 } = require('bcrypt');
+const PNF = require('google-libphonenumber').PhoneNumberFormat;
+const phoneUtil = require('google-libphonenumber').PhoneNumberUtil.getInstance();
 
 const router = express.Router();
 const { Client } = require('@notionhq/client');
@@ -40,28 +42,36 @@ const notion = new Client({
   auth: SECRET,
 });
 
-// send new otp to body email
-router.post('/email', async (req, res) => {
+// send new otp to body phone number
+router.post('/phoneNumber', async (req, res) => {
   try {
-    // obtain email from body
-    const { email } = req.body;
+    // obtain phone number from body
+    const { phoneNumber } = req.body;
 
     // generate ex date
     const now = new Date();
     const expirationTime = AddMinutesToDate(now, 10);
 
     // generate OTP
-    const otp = otpGenerator.generate(6, {
-      alphabets: false,
-      upperCase: false,
+    const otp = otpGenerator.generate(4, {
+      digits: true,
+      lowerCaseAlphabets: false,
       specialChars: false,
+      upperCaseAlphabets: false,
     });
 
     // generate database object
     const model = OTP;
 
-    // check email exist
-    if (!email) return res.status(400).json({ status: 400, error: 'No email provided' });
+    // check phoneNumber exist
+    if (!phoneNumber) return res.status(400).json({ status: 400, error: 'No phone number provided' });
+
+    // check phoneNumber if it is a valid Malaysian phone number
+    const number = phoneUtil.parseAndKeepRawInput(phoneNumber, 'MY');
+    if (!phoneUtil.isValidNumberForRegion(number, 'MY')) return res.status(400).json({ status: 400, error: 'Not a valid Malaysian phone number' });
+
+    // formatted phone number
+    const formattedPhoneNumber = phoneUtil.format(number, PNF.E164);
 
     // generate model object
     const salt = genSaltSync();
@@ -76,12 +86,13 @@ router.post('/email', async (req, res) => {
       },
       properties: model.model,
     });
-    // send otp via ???
-    console.log(`=======THIS IS YOUR OTP ${otp}============`);
+
+    // send otp
+    console.log(`Sending OTP of ${otp} to ${formattedPhoneNumber}...`);
 
     return res.status(200).json({
       status: 201,
-      data: { key: generateEncKey(notionRes.id, model, email, 'secret123') },
+      data: { key: generateEncKey(notionRes.id, model, formattedPhoneNumber, 'secret123'), check: formattedPhoneNumber },
     });
   } catch (error) {
     console.error(error);
@@ -99,7 +110,7 @@ router.post('/verify', async (req, res) => {
   if (!otp || !key || !check) { return res.status(400).json({ status: 400, error: 'No otp, key or check provided' }); }
 
   try {
-    // decode key and check email
+    // decode key and check phoneNumber
     decodedKey = decodeEncKey(key, 'secret123');
     if (decodedKey.check !== check) return res.status(400).json({ status: 400, error: 'OTP not for this check' });
   } catch (error) {
@@ -111,10 +122,10 @@ router.post('/verify', async (req, res) => {
   const notionRes = await notion.pages.retrieve({
     page_id: decodedKey.id,
   });
-  if (!notionRes) return res.status(404).json({ status: 404, error: 'No OTP found ' });
+  if (!notionRes) return res.status(404).json({ status: 404, error: 'No OTP found' });
 
   // check otp correctness
-  if (!compareSync(otp, notionRes.properties.OTP.title[0]?.text.content)) return res.status(404).json({ status: 404, error: 'No OTP found ' });
+  if (!compareSync(otp, notionRes.properties.OTP.title[0]?.text.content)) return res.status(404).json({ status: 404, error: 'OTP incorrect' });
 
   // check for expiry date
   const expDate = new Date(notionRes
