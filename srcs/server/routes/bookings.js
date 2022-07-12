@@ -6,6 +6,9 @@ const { Client } = require('@notionhq/client');
 const Booking = require('../models/Booking');
 const { fieldExists, generateFilter } = require('../utils/utils');
 
+// TODO confirmedTime validation (?)
+// TODO update docs on new properties
+
 // declaring constants
 const { ENV } = process.env;
 const SECRET = (ENV === 'dev') ? process.env.NOTION_SECRET_DEV : process.env.NOTION_SECRET;
@@ -26,15 +29,17 @@ const notion = new Client({
 const serializeObject = (raw) => {
   const serializedElem = {};
   serializedElem.id = raw.id;
-  serializedElem.Reason = raw.properties.Reason.title[0]?.text.content ?? null;
-  serializedElem.Attachment = raw.properties.Attachment?.url ?? null;
-  serializedElem.Name = raw.properties.Name.rich_text[0]?.text.content ?? null;
-  serializedElem.Email = raw.properties.Email?.email ?? null;
-  serializedElem.Contact = raw.properties.Contact?.phone_number ?? null;
-  serializedElem.Status = raw.properties.Status.select?.name ?? null;
-  serializedElem.SuggestedDate = raw.properties.SuggestedDate.date?.start ?? null;
-  serializedElem.ConfirmedDate = raw.properties.ConfirmedDate.date?.start ?? null;
-  serializedElem.Address = raw.properties.Address.rich_text[0]?.text.content ?? null;
+  serializedElem.Reason = raw.properties.Reason.title[0]?.text.content;
+  serializedElem.Attachment = raw.properties.Attachment?.url;
+  serializedElem.Name = raw.properties.Name.rich_text[0]?.text.content;
+  serializedElem.CompanyName = raw.properties.CompanyName.rich_text[0]?.text.content;
+  serializedElem.Email = raw.properties.Email?.email;
+  serializedElem.Contact = raw.properties.Contact?.phone_number;
+  serializedElem.Status = raw.properties.Status.select?.name;
+  serializedElem.SuggestedDate = raw.properties.SuggestedDate.date?.start;
+  serializedElem.ConfirmedDate = raw.properties.ConfirmedDate.date?.start;
+  serializedElem.ConfirmedTime = raw.properties.ConfirmedTime.rich_text[0]?.text.content;
+  serializedElem.Address = raw.properties.Address.rich_text[0]?.text.content;
 
   return serializedElem;
 };
@@ -121,7 +126,9 @@ router.get('/:id', async (req, res) => {
     notionRes = await notion.pages.retrieve(payload);
     if (notionRes && notionRes.parent.database_id.replaceAll('-', '') !== BOOKING_DB_ID) { return res.status(404).json({ status: 404, error: 'Item not found' }); }
   } catch (error) {
-    return res.status(error.status).json({ status: error.status, error });
+    console.error('error ', error);
+    return res.status(error.status ? error.status : 500)
+      .json({ status: error.status ? error.status : 500, error });
   }
   if (noSerialize && noSerialize === 'true') return res.status(200).json({ status: 200, data: notionRes });
 
@@ -144,17 +151,21 @@ router.post('/', async (req, res) => {
   const model = Booking;
   if (Object.keys(body).length === 0) { return res.status(400).json({ status: 400, error: 'No JSON body found' }); }
   for (let index = 0; index < model.fields.length; index += 1) {
-    if (!body[model.fields[index].name] && model.fields[index].name !== 'ConfirmedDate') return res.status(400).json({ status: 400, error: `${model.fields[index].name} field is required` });
+    if (!body[model.fields[index].name]
+      && model.fields[index].name !== 'ConfirmedDate'
+      && model.fields[index].name !== 'ConfirmedTime') return res.status(400).json({ status: 400, error: `${model.fields[index].name} field is required` });
   }
   model.setReason = body.Reason;
   model.setAttachment = body.Attachment;
   model.setName = body.Name;
+  model.setCompanyName = body.CompanyName;
   model.setEmail = body.Email;
   model.setContact = body.Contact;
   if (!model.STATUS_ENUM.includes(body.Status)) { return res.status(400).json({ status: 400, error: 'Invalid status' }); }
   model.setStatus = body.Status;
   model.setSuggestedDate = body.SuggestedDate;
-  if (body.ConfirmedDate) model.setConfimedDate = body.ConfirmedDate;
+  if (body.ConfirmedDate) model.setConfirmedDate = body.ConfirmedDate;
+  if (body.ConfirmedTime) model.setConfirmedTime = body.ConfirmedTime;
   model.setAddress = body.Address;
   try {
     notionRes = await notion.pages.create({
@@ -190,6 +201,7 @@ router.patch('/:id', async (req, res) => {
   if (body.Reason) { model.setReason = body.Reason; }
   if (body.Attachment) { model.setAttachment = body.Attachment; }
   if (body.Name) { model.setName = body.Name; }
+  if (body.CompanyName) { model.setCompanyName = body.CompanyName; }
   if (body.Email) { model.setEmail = body.Email; }
   if (body.Contact) { model.setContact = body.Contact; }
   if (body.Status) {
@@ -197,7 +209,8 @@ router.patch('/:id', async (req, res) => {
     model.setStatus = body.Status;
   }
   if (body.SuggestedDate) { model.setSuggestedDate = body.SuggestedDate; }
-  if (body.ConfirmedDate) { model.setConfimedDate = body.ConfirmedDate; }
+  if (body.ConfirmedDate) { model.setConfirmedDate = body.ConfirmedDate; }
+  if (body.ConfirmedTime) { model.setConfirmedTime = body.ConfirmedTime; }
   if (body.Address) { model.setAddress = body.Address; }
   try {
     notionRes = await notion.pages.update({

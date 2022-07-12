@@ -58,6 +58,18 @@ const runBookingMigrations = async () => {
         ],
       },
 
+      CompanyName: {
+        rich_text:
+        [
+          {
+            text:
+            {
+              content: 'company name',
+            },
+          },
+        ],
+      },
+
       Email: {
         email: 'name@email.com',
 
@@ -123,6 +135,18 @@ const runBookingMigrations = async () => {
             text:
             {
               content: '2name name',
+            },
+          },
+        ],
+      },
+
+      CompanyName: {
+        rich_text:
+        [
+          {
+            text:
+            {
+              content: 'company name',
             },
           },
         ],
@@ -253,7 +277,7 @@ const runRepairMigrations = async () => {
       {
         select:
         {
-          name: 'OTW',
+          name: 'Incomplete',
         },
       },
     },

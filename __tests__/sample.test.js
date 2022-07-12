@@ -114,6 +114,7 @@ describe('Booking Endpoint Tests', () => {
     payload.Reason = 'Techname';
     payload.Attachment = 'stuff.com';
     payload.Name = 'Name';
+    payload.CompanyName = 'CompanyName';
     payload.Email = 'mail@mail.mail';
     payload.Contact = '098765432';
     payload.Status = 'Pending';
@@ -175,9 +176,9 @@ describe('Repair Endpoint Tests', () => {
 
   // test page cursor here
   it('List Repairs (sort)', async () => {
-    const res = await request(app).get(`${API_URL}?sortBy=descending&sortOn=Technician`);
+    const res = await request(app).get(`${API_URL}?sortBy=descending&sortOn=Status`);
     expect(res.statusCode).toBe(200);
-    expect(res.body.data[0].Technician.localeCompare(res.body.data[1].Technician)).toBe(-1);
+    expect(res.body.data[0].Status.localeCompare(res.body.data[1].Status)).toBe(-1);
   });
 
   it('List Repairs (filter)', async () => {

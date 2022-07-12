@@ -1,6 +1,6 @@
 const { dataTypes } = require('../utils/utils');
 
-const STATUS_ENUM = ['Resolved', 'Resolving', 'Immenent', 'OTW'];
+const STATUS_ENUM = ['Resolved', 'Resolving', 'Immenent', 'OTW', 'Incomplete'];
 const FIELDS = [
   {
     name: 'Technician',
