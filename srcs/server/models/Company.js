@@ -1,4 +1,4 @@
-const dataTypes = require('../utils/utils');
+const { dataTypes } = require('../utils/utils');
 
 const FIELDS = [
   {

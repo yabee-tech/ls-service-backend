@@ -35,6 +35,35 @@ const decodeEncKey = (key, secret) => {
 const { ENV } = process.env;
 const SECRET = (ENV === 'dev') ? process.env.NOTION_SECRET_DEV : process.env.NOTION_SECRET;
 const OTP_DB_ID = (ENV === 'dev') ? process.env.NOTION_OTP_DB_ID_DEV : process.env.NOTION_OTP_DB_ID;
+const COMPANY_DB_ID = ENV === 'dev'
+  ? process.env.NOTION_COMPANY_DB_ID_DEV
+  : process.env.NOTION_COMPANY_DB_ID;
+
+/**
+ * Takes in a raw notion api object and converts it into a
+ * more redable and less verbose json response
+ *
+ * @param {*} raw Raw notion api response object
+ * @returns a less verbose JSON response of the object
+ */
+const serializeCompanyObject = (raw) => {
+  const serializedElem = {};
+  serializedElem.id = raw.id;
+  serializedElem.Name = raw.properties.Name.title[0]?.text.content;
+  serializedElem.Contact = raw.properties.Contact?.phone_number;
+  serializedElem.AddressLine1 = raw.properties.AddressLine1.rich_text[0]?.text.content;
+  serializedElem.AddressLine2 = raw.properties.AddressLine2.rich_text[0]?.text.content;
+  serializedElem.State = raw.properties.State.rich_text[0]?.text.content;
+  serializedElem.Postcode = raw.properties.Postcode.rich_text[0]?.text.content;
+  serializedElem.Website = raw.properties.Website.rich_text[0]?.text.content;
+  serializedElem.RegistrationNumber = raw.properties.RegistrationNumber.rich_text[0]?.text.content;
+  serializedElem.Email = raw.properties.Email?.email;
+  serializedElem.ContactName = raw.properties.ContactName.rich_text[0]?.text.content;
+  serializedElem.ContactPhone = raw.properties.ContactPhone?.phone_number;
+  serializedElem.ContactEmail = raw.properties.ContactEmail?.email;
+
+  return serializedElem;
+};
 
 // To add minutes to the current time
 const AddMinutesToDate = (date, minutes) => new Date(date.getTime() + minutes * 60000);
@@ -76,6 +105,10 @@ router.post('/phoneNumber', async (req, res) => {
 
     // formatted phone number
     const formattedPhoneNumber = phoneUtil.format(number, PNF.E164);
+
+    // check if phone number is registered
+    const notionRes2 = await notion.databases.query({ database_id: COMPANY_DB_ID, page_size: 1, filter: { property: 'ContactPhone', phone_number: { equals: formattedPhoneNumber } } });
+    if (notionRes2.results.length === 0) return res.status(404).json({ status: 404, error: `${formattedPhoneNumber} is not registered` });
 
     // generate model object
     const salt = genSaltSync();
@@ -130,7 +163,7 @@ router.post('/verify', async (req, res) => {
   if (!notionRes) return res.status(404).json({ status: 404, error: 'No OTP found' });
 
   // check otp correctness
-  if (!compareSync(otp, notionRes.properties.OTP.title[0]?.text.content)) return res.status(404).json({ status: 404, error: 'OTP incorrect' });
+  if (!compareSync(otp, notionRes.properties.OTP.title[0]?.text.content)) return res.status(404).json({ status: 404, error: 'OTP Incorrect' });
 
   // check for expiry date
   const expDate = new Date(notionRes
@@ -163,7 +196,12 @@ router.post('/verify', async (req, res) => {
     console.error(error);
     return res.status(500).json({ status: 500, error: error.message });
   }
-  return res.json({ status: 200, data: { key } });
+
+  // fetch the company data
+  const notionRes2 = await notion.databases.query({ database_id: COMPANY_DB_ID, page_size: 1, filter: { property: 'ContactPhone', phone_number: { equals: check } } });
+  if (notionRes2.results.length === 0) return res.status(404).json({ status: 404, error: `${check} is not registered` });
+
+  return res.json({ status: 200, data: serializeCompanyObject(notionRes2.results[0]) });
 });
 
 module.exports = router;
