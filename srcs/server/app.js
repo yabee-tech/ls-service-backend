@@ -13,6 +13,7 @@ const bookingRoutes = require('./routes/bookings');
 const repairRoutes = require('./routes/repair');
 const feedbackRoutes = require('./routes/feedback');
 const technicianRoutes = require('./routes/technician');
+const companyRoutes = require('./routes/company');
 const authRoutes = require('./routes/auth');
 const otpRoutes = require('./routes/otp');
 
@@ -30,6 +31,7 @@ app.use('/api/v1/bookings', bookingRoutes);
 app.use('/api/v1/repairs', repairRoutes);
 app.use('/api/v1/feedbacks', feedbackRoutes);
 app.use('/api/v1/technicians', technicianRoutes);
+app.use('/api/v1/companies', companyRoutes);
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/otp', otpRoutes);
 
