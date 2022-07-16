@@ -1,5 +1,7 @@
 const express = require('express');
 require('dotenv').config();
+const PNF = require('google-libphonenumber').PhoneNumberFormat;
+const phoneUtil = require('google-libphonenumber').PhoneNumberUtil.getInstance();
 
 const router = express.Router();
 const { Client } = require('@notionhq/client');
@@ -29,6 +31,7 @@ const serializeObject = (raw) => {
   const serializedElem = {};
   serializedElem.id = raw.id;
   serializedElem.Name = raw.properties.Name.title[0]?.text.content;
+  serializedElem.AvatarUrl = raw.properties.AvatarUrl.rich_text[0]?.text.content;
   serializedElem.Contact = raw.properties.Contact?.phone_number;
   serializedElem.AddressLine1 = raw.properties.AddressLine1.rich_text[0]?.text.content;
   serializedElem.AddressLine2 = raw.properties.AddressLine2.rich_text[0]?.text.content;
@@ -189,6 +192,11 @@ router.post('/', async (req, res) => {
   for (let index = 0; index < model.fields.length; index += 1) {
     // && model.fields[index].name !== 'ConfirmedDate'
     // && model.fields[index].name !== 'ConfirmedTime'
+
+    // skip on these optional fields
+    // eslint-disable-next-line no-continue
+    if (model.fields[index].name === 'AvatarUrl' || model.fields[index].name === 'Website' || model.fields[index].name === 'AddressLine2') { continue; }
+
     if (!body[model.fields[index].name]) {
       return res
         .status(400)
@@ -198,7 +206,20 @@ router.post('/', async (req, res) => {
         });
     }
   }
+
+  // check phoneNumber if it is a valid Malaysian phone number
+  const number = phoneUtil.parseAndKeepRawInput(body.ContactPhone, 'MY');
+  if (!phoneUtil.isValidNumberForRegion(number, 'MY')) return res.status(400).json({ status: 400, error: 'Not a valid Malaysian phone number' });
+
+  // formatted phone number
+  const formattedPhoneNumber = phoneUtil.format(number, PNF.E164);
+
+  // check if phone number is already registered
+  const notionRes2 = await notion.databases.query({ database_id: COMPANY_DB_ID, page_size: 1, filter: { property: 'ContactPhone', phone_number: { equals: formattedPhoneNumber } } });
+  if (notionRes2.results.length !== 0) return res.status(404).json({ status: 404, error: `${formattedPhoneNumber} is already registered` });
+
   model.setName = body.Name;
+  model.setAvatarUrl = body.AvatarUrl;
   model.setContact = body.Contact;
   model.setAddressLine1 = body.AddressLine1;
   model.setAddressLine2 = body.AddressLine2;

@@ -50,6 +50,7 @@ const serializeCompanyObject = (raw) => {
   const serializedElem = {};
   serializedElem.id = raw.id;
   serializedElem.Name = raw.properties.Name.title[0]?.text.content;
+  serializedElem.AvatarUrl = raw.properties.AvatarUrl.rich_text[0]?.text.content;
   serializedElem.Contact = raw.properties.Contact?.phone_number;
   serializedElem.AddressLine1 = raw.properties.AddressLine1.rich_text[0]?.text.content;
   serializedElem.AddressLine2 = raw.properties.AddressLine2.rich_text[0]?.text.content;

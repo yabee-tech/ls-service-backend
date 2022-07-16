@@ -30,8 +30,11 @@ const serializeObject = (raw) => {
   const serializedElem = {};
   serializedElem.id = raw.id;
   serializedElem.Reason = raw.properties.Reason.title[0]?.text.content;
-  serializedElem.Attachment = raw.properties.Attachment?.url;
+  serializedElem.Attachment1 = raw.properties.Attachment1?.url;
+  serializedElem.Attachment2 = raw.properties.Attachment2?.url;
+  serializedElem.Attachment3 = raw.properties.Attachment3?.url;
   serializedElem.Name = raw.properties.Name.rich_text[0]?.text.content;
+  serializedElem.Machine = raw.properties.Machine.rich_text[0]?.text.content;
   serializedElem.CompanyName = raw.properties.CompanyName.rich_text[0]?.text.content;
   serializedElem.Email = raw.properties.Email?.email;
   serializedElem.Contact = raw.properties.Contact?.phone_number;
@@ -153,11 +156,16 @@ router.post('/', async (req, res) => {
   for (let index = 0; index < model.fields.length; index += 1) {
     if (!body[model.fields[index].name]
       && model.fields[index].name !== 'ConfirmedDate'
-      && model.fields[index].name !== 'ConfirmedTime') return res.status(400).json({ status: 400, error: `${model.fields[index].name} field is required` });
+      && model.fields[index].name !== 'ConfirmedTime'
+      && model.fields[index].name !== 'Attachment2'
+      && model.fields[index].name !== 'Attachment3') return res.status(400).json({ status: 400, error: `${model.fields[index].name} field is required` });
   }
   model.setReason = body.Reason;
-  model.setAttachment = body.Attachment;
+  model.setAttachment1 = body.Attachment1;
+  if (body.Attachment2) model.setAttachment2 = body.Attachment2;
+  if (body.Attachment3) model.setAttachment3 = body.Attachment3;
   model.setName = body.Name;
+  model.setMachine = body.Machine;
   model.setCompanyName = body.CompanyName;
   model.setEmail = body.Email;
   model.setContact = body.Contact;
@@ -199,8 +207,11 @@ router.patch('/:id', async (req, res) => {
   const model = Booking;
   if (Object.keys(body).length === 0) { return res.status(400).json({ status: 400, error: 'No JSON body found' }); }
   if (body.Reason) { model.setReason = body.Reason; }
-  if (body.Attachment) { model.setAttachment = body.Attachment; }
+  if (body.Attachment1) { model.setAttachment1 = body.Attachment1; }
+  if (body.Attachment2) { model.setAttachment2 = body.Attachment2; }
+  if (body.Attachment3) { model.setAttachment3 = body.Attachment3; }
   if (body.Name) { model.setName = body.Name; }
+  if (body.Machine) { model.setMachine = body.Machine; }
   if (body.CompanyName) { model.setCompanyName = body.CompanyName; }
   if (body.Email) { model.setEmail = body.Email; }
   if (body.Contact) { model.setContact = body.Contact; }

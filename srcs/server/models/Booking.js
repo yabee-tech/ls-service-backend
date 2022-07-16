@@ -7,11 +7,23 @@ const FIELDS = [
     type: dataTypes.TITLE,
   },
   {
-    name: 'Attachment',
+    name: 'Attachment1',
+    type: dataTypes.URL,
+  },
+  {
+    name: 'Attachment2',
+    type: dataTypes.URL,
+  },
+  {
+    name: 'Attachment3',
     type: dataTypes.URL,
   },
   {
     name: 'Name',
+    type: dataTypes.RICH_TEXT,
+  },
+  {
+    name: 'Machine',
     type: dataTypes.RICH_TEXT,
   },
   {
@@ -58,8 +70,11 @@ const Booking = {
   fields: FIELDS,
 
   get getReason() { return this.model.Reason?.title[0].text.content; },
-  get getAttachment() { return this.model.Attachment?.url; },
+  get getAttachment1() { return this.model.Attachment1?.url; },
+  get getAttachment2() { return this.model.Attachment2?.url; },
+  get getAttachment3() { return this.model.Attachment3?.url; },
   get getName() { return this.model.Name.rich_text[0]?.text.content; },
+  get getMachine() { return this.model.Machine.rich_text[0]?.text.content; },
   get getCompanyName() { return this.model.CompanyName.rich_text[0]?.text.content; },
   get getEmail() { return this.model.Email?.email; },
   get getContact() { return this.model.Contact?.phone_number; },
@@ -82,13 +97,36 @@ const Booking = {
       ],
     };
   },
-  set setAttachment(value) {
-    this.model.Attachment = {
+  set setAttachment1(value) {
+    this.model.Attachment1 = {
+      url: value,
+    };
+  },
+  set setAttachment2(value) {
+    this.model.Attachment2 = {
+      url: value,
+    };
+  },
+  set setAttachment3(value) {
+    this.model.Attachment3 = {
       url: value,
     };
   },
   set setName(value) {
     this.model.Name = {
+      rich_text:
+      [
+        {
+          text:
+          {
+            content: value,
+          },
+        },
+      ],
+    };
+  },
+  set setMachine(value) {
+    this.model.Machine = {
       rich_text:
       [
         {

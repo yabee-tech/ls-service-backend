@@ -6,6 +6,10 @@ const FIELDS = [
     type: dataTypes.TITLE,
   },
   {
+    name: 'AvatarUrl',
+    type: dataTypes.RICH_TEXT,
+  },
+  {
     name: 'Contact',
     type: dataTypes.PHONE_NUMBER,
   },
@@ -61,6 +65,7 @@ const Company = {
   fields: FIELDS,
 
   get getName() { return this.model.Name?.title[0].text.content; },
+  get getUrl() { return this.model.AvatarUrl.rich_text[0]?.text.content; },
   get getContact() { return this.model.Contact?.phone_number; },
   get getAddressLine1() { return this.model.AddressLine1.rich_text[0]?.text.content; },
   get getAddressLine2() { return this.model.AddressLine2.rich_text[0]?.text.content; },
@@ -76,6 +81,19 @@ const Company = {
   set setName(value) {
     this.model.Name = {
       title:
+      [
+        {
+          text:
+          {
+            content: value,
+          },
+        },
+      ],
+    };
+  },
+  set setAvatarUrl(value) {
+    this.model.AvatarUrl = {
+      rich_text:
       [
         {
           text:
