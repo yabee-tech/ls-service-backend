@@ -218,7 +218,7 @@ router.post('/', async (req, res) => {
   const notionRes2 = await notion.databases.query({ database_id: COMPANY_DB_ID, page_size: 1, filter: { property: 'ContactPhone', phone_number: { equals: formattedPhoneNumber } } });
   if (notionRes2.results.length !== 0) return res.status(404).json({ status: 404, error: `${formattedPhoneNumber} is already registered` });
 
-  model.setName = body.Name;
+  model.setName = body.Name.trim();
   model.setAvatarUrl = body.AvatarUrl;
   model.setContact = body.Contact;
   model.setAddressLine1 = body.AddressLine1;
