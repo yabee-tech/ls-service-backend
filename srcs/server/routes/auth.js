@@ -6,6 +6,7 @@ const { Client } = require('@notionhq/client');
 const { genSaltSync, hashSync, compareSync } = require('bcrypt');
 const Technician = require('../models/Technician');
 const { generateFilter } = require('../utils/utils');
+const { sendNotification } = require('../../bot/actions');
 
 // declaring constants
 const { ENV } = process.env;
@@ -67,6 +68,7 @@ router.post('/signup', async (req, res) => {
       },
       properties: model.model,
     });
+    sendNotification(`New technician ${body.Name} has signed up 👨🏻‍🔧`);
     if (noSerialize === 'true') { return res.status(201).json({ status: 201, data: notionRes }); }
     return res.status(200).json({ status: 200, data: serializeObject(notionRes) });
   } catch (error) {

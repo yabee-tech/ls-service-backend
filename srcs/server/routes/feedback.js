@@ -5,6 +5,7 @@ const router = express.Router();
 const { Client } = require('@notionhq/client');
 const Feedback = require('../models/Feedback');
 const { fieldExists, generateFilter } = require('../utils/utils');
+const { sendNotification } = require('../../bot/actions');
 
 // declaring constants
 const { ENV } = process.env;
@@ -175,6 +176,7 @@ router.post('/', async (req, res) => {
       },
       properties: model.model,
     });
+    sendNotification('A new feedback has been received. 📋');
     if (noSerialize === 'true') { return res.status(200).json({ status: 200, data: notionRes }); }
     return res.status(200).json({ status: 200, data: serializeObject(notionRes) });
   } catch (error) {

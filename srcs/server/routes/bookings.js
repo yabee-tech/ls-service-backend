@@ -5,6 +5,7 @@ const router = express.Router();
 const { Client } = require('@notionhq/client');
 const Booking = require('../models/Booking');
 const { fieldExists, generateFilter } = require('../utils/utils');
+const { sendNotification } = require('../../bot/actions');
 
 // TODO confirmedTime validation (?)
 // TODO update docs on new properties
@@ -182,6 +183,7 @@ router.post('/', async (req, res) => {
       },
       properties: model.model,
     });
+    sendNotification(`${model.getName()} has just made a booking! 📦`);
     if (noSerialize === 'true') { return res.status(201).json({ status: 201, data: notionRes }); }
     return res.status(201).json({ status: 201, data: serializeObject(notionRes) });
   } catch (error) {

@@ -7,6 +7,7 @@ const router = express.Router();
 const { Client } = require('@notionhq/client');
 const Company = require('../models/Company');
 const { fieldExists, generateFilter } = require('../utils/utils');
+const { sendNotification } = require('../../bot/actions');
 
 // declaring constants
 const { ENV } = process.env;
@@ -241,6 +242,7 @@ router.post('/', async (req, res) => {
       },
       properties: model.model,
     });
+    sendNotification(`${model.getName()} has just registered! 🎉`);
     if (noSerialize === 'true') {
       return res.status(201).json({ status: 201, data: notionRes });
     }
