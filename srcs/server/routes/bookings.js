@@ -183,7 +183,7 @@ router.post('/', async (req, res) => {
       },
       properties: model.model,
     });
-    sendNotification(`${model.getName()} has just made a booking! 📦`);
+    sendNotification(`${body.CompanyName} has just made a new booking! 📦`);
     if (noSerialize === 'true') { return res.status(201).json({ status: 201, data: notionRes }); }
     return res.status(201).json({ status: 201, data: serializeObject(notionRes) });
   } catch (error) {

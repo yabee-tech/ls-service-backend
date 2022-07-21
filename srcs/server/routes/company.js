@@ -242,7 +242,7 @@ router.post('/', async (req, res) => {
       },
       properties: model.model,
     });
-    sendNotification(`${model.getName()} has just registered! 🎉`);
+    sendNotification(`${body.Name.trim()} has just registered! 🎉`);
     if (noSerialize === 'true') {
       return res.status(201).json({ status: 201, data: notionRes });
     }

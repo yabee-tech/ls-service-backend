@@ -68,7 +68,7 @@ router.post('/signup', async (req, res) => {
       },
       properties: model.model,
     });
-    sendNotification(`New technician ${body.Name} has signed up 👨🏻‍🔧`);
+    sendNotification(`${body.Name} has just signed up as a technician 👨🏻‍🔧`);
     if (noSerialize === 'true') { return res.status(201).json({ status: 201, data: notionRes }); }
     return res.status(200).json({ status: 200, data: serializeObject(notionRes) });
   } catch (error) {
